@@ -1,7 +1,5 @@
-use crate::{
-    environments::runtime::BindingLocator, property::PropertyDescriptor, Context, JsResult,
-    JsString, JsValue,
-};
+use super::BindingLocator;
+use crate::{property::PropertyDescriptor, Context, JsResult, JsString, JsValue};
 use boa_interner::Sym;
 use rustc_hash::FxHashMap;
 
@@ -31,6 +29,15 @@ impl CompileTimeEnvironment {
     }
 }
 
+impl Default for CompileTimeEnvironment {
+    fn default() -> Self {
+        Self {
+            bindings: FxHashMap::default(),
+            function_scope: true,
+        }
+    }
+}
+
 /// The compile time environment stack contains a stack of all environments at bytecode compile time.
 ///
 /// The first environment on the stack represents the global environment.
@@ -43,16 +50,9 @@ pub(crate) struct CompileTimeEnvironmentStack {
 
 impl CompileTimeEnvironmentStack {
     /// Creates a new compile time environment stack.
-    ///
-    /// This function should only be used once, on realm creation.
     #[inline]
     pub(crate) fn new() -> Self {
-        Self {
-            stack: vec![CompileTimeEnvironment {
-                bindings: FxHashMap::default(),
-                function_scope: true,
-            }],
-        }
+        Self { stack: vec![] }
     }
 
     /// Get the number of bindings for the current last environment.

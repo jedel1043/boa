@@ -1,6 +1,6 @@
 use crate::{
     builtins::Array,
-    environments::DeclarativeEnvironment,
+    context::environments::DeclarativeEnvironment,
     object::{JsObject, ObjectData},
     property::PropertyDescriptor,
     symbol::{self, WellKnownSymbols},

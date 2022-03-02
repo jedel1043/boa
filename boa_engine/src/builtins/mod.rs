@@ -15,7 +15,6 @@ pub mod generator_function;
 pub mod global_this;
 pub mod infinity;
 pub mod intl;
-pub mod intrinsics;
 pub mod iterable;
 pub mod json;
 pub mod map;

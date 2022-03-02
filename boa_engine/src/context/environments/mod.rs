@@ -28,7 +28,7 @@ mod compile;
 mod runtime;
 
 pub(crate) use {
-    compile::CompileTimeEnvironmentStack,
+    compile::{CompileTimeEnvironment, CompileTimeEnvironmentStack},
     runtime::{BindingLocator, DeclarativeEnvironment, DeclarativeEnvironmentStack},
 };
 

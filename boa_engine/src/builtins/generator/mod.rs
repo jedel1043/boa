@@ -11,12 +11,14 @@
 
 use crate::{
     builtins::{iterable::create_iter_result_object, BuiltIn, JsArgs},
-    environments::DeclarativeEnvironmentStack,
+    context::{
+        environments::DeclarativeEnvironmentStack,
+        vm::{CallFrame, GeneratorResumeKind, ReturnType},
+    },
     object::{ConstructorBuilder, JsObject, ObjectData},
     property::{Attribute, PropertyDescriptor},
     symbol::WellKnownSymbols,
     value::JsValue,
-    vm::{CallFrame, GeneratorResumeKind, ReturnType},
     Context, JsResult,
 };
 use boa_gc::{Cell, Finalize, Gc, Trace};

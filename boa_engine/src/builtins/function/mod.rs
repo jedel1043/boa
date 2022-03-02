@@ -13,8 +13,9 @@
 
 use crate::{
     builtins::{BuiltIn, JsArgs},
+    context::environments::DeclarativeEnvironmentStack,
+    context::vm,
     context::StandardObjects,
-    environments::DeclarativeEnvironmentStack,
     object::{
         internal_methods::get_prototype_from_constructor, JsObject, NativeObject, Object,
         ObjectData,
@@ -176,11 +177,11 @@ pub enum Function {
         captures: Captures,
     },
     Ordinary {
-        code: Gc<crate::vm::CodeBlock>,
+        code: Gc<vm::CodeBlock>,
         environments: DeclarativeEnvironmentStack,
     },
     Generator {
-        code: Gc<crate::vm::CodeBlock>,
+        code: Gc<vm::CodeBlock>,
         environments: DeclarativeEnvironmentStack,
     },
 }

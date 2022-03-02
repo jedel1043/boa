@@ -1,6 +1,9 @@
 use crate::{
     builtins::function::ThisMode,
-    environments::BindingLocator,
+    context::{
+        environments::BindingLocator,
+        vm::{BindingOpcode, CodeBlock, Opcode},
+    },
     syntax::ast::{
         node::{
             declaration::{BindingPatternTypeArray, BindingPatternTypeObject, DeclarationPattern},
@@ -12,7 +15,6 @@ use crate::{
         op::{AssignOp, BinOp, BitOp, CompOp, LogOp, NumOp, UnaryOp},
         Const, Node,
     },
-    vm::{BindingOpcode, CodeBlock, Opcode},
     Context, JsBigInt, JsResult, JsString, JsValue,
 };
 use boa_gc::Gc;

@@ -2,23 +2,22 @@
 //! This module will provide an instruction set for the AST to use, various traits,
 //! plus an interpreter to execute those instructions
 
+mod call_frame;
+mod code_block;
+mod opcode;
+
 use crate::{
     builtins::{iterable::IteratorRecord, Array, ForInIterator, Number},
     property::{DescriptorKind, PropertyDescriptor, PropertyKey},
     value::Numeric,
-    vm::{
-        call_frame::CatchAddresses,
-        code_block::{create_function_object, create_generator_function_object, Readable},
-    },
     Context, JsBigInt, JsResult, JsString, JsValue,
 };
 use boa_interner::ToInternedString;
 use boa_profiler::Profiler;
 use std::{convert::TryInto, mem::size_of, ops::Neg, time::Instant};
 
-mod call_frame;
-mod code_block;
-mod opcode;
+use call_frame::CatchAddresses;
+use code_block::{create_function_object, create_generator_function_object, Readable};
 
 pub use {call_frame::CallFrame, code_block::CodeBlock, opcode::Opcode};
 

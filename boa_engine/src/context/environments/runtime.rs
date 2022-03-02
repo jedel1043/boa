@@ -251,11 +251,7 @@ pub(crate) struct BindingLocator {
 impl BindingLocator {
     /// Creates a new declarative binding locator that has knows indices.
     #[inline]
-    pub(in crate::environments) fn declarative(
-        name: Sym,
-        environment_index: usize,
-        binding_index: usize,
-    ) -> Self {
+    pub(super) fn declarative(name: Sym, environment_index: usize, binding_index: usize) -> Self {
         Self {
             name,
             environment_index,
@@ -267,7 +263,7 @@ impl BindingLocator {
 
     /// Creates a binding locator that indicates that the binding is on the global object.
     #[inline]
-    pub(in crate::environments) fn global(name: Sym) -> Self {
+    pub(super) fn global(name: Sym) -> Self {
         Self {
             name,
             environment_index: 0,
@@ -280,7 +276,7 @@ impl BindingLocator {
     /// Creates a binding locator that indicates that it was attempted to mutate an immutable binding.
     /// At runtime this should always produce a type error.
     #[inline]
-    pub(in crate::environments) fn mutate_immutable(name: Sym) -> Self {
+    pub(super) fn mutate_immutable(name: Sym) -> Self {
         Self {
             name,
             environment_index: 0,

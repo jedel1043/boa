@@ -10,70 +10,6 @@ use crate::{
 };
 use boa_profiler::Profiler;
 
-#[derive(Debug, Default)]
-pub struct IteratorPrototypes {
-    iterator_prototype: JsObject,
-    array_iterator: JsObject,
-    set_iterator: JsObject,
-    string_iterator: JsObject,
-    regexp_string_iterator: JsObject,
-    map_iterator: JsObject,
-    for_in_iterator: JsObject,
-}
-
-impl IteratorPrototypes {
-    pub(crate) fn init(context: &mut Context) -> Self {
-        let iterator_prototype = create_iterator_prototype(context);
-        Self {
-            array_iterator: ArrayIterator::create_prototype(iterator_prototype.clone(), context),
-            set_iterator: SetIterator::create_prototype(iterator_prototype.clone(), context),
-            string_iterator: StringIterator::create_prototype(iterator_prototype.clone(), context),
-            regexp_string_iterator: RegExpStringIterator::create_prototype(
-                iterator_prototype.clone(),
-                context,
-            ),
-            map_iterator: MapIterator::create_prototype(iterator_prototype.clone(), context),
-            for_in_iterator: ForInIterator::create_prototype(iterator_prototype.clone(), context),
-            iterator_prototype,
-        }
-    }
-
-    #[inline]
-    pub fn array_iterator(&self) -> JsObject {
-        self.array_iterator.clone()
-    }
-
-    #[inline]
-    pub fn iterator_prototype(&self) -> JsObject {
-        self.iterator_prototype.clone()
-    }
-
-    #[inline]
-    pub fn set_iterator(&self) -> JsObject {
-        self.set_iterator.clone()
-    }
-
-    #[inline]
-    pub fn string_iterator(&self) -> JsObject {
-        self.string_iterator.clone()
-    }
-
-    #[inline]
-    pub fn regexp_string_iterator(&self) -> JsObject {
-        self.regexp_string_iterator.clone()
-    }
-
-    #[inline]
-    pub fn map_iterator(&self) -> JsObject {
-        self.map_iterator.clone()
-    }
-
-    #[inline]
-    pub fn for_in_iterator(&self) -> JsObject {
-        self.for_in_iterator.clone()
-    }
-}
-
 /// `CreateIterResultObject( value, done )`
 ///
 /// Generates an object supporting the `IteratorResult` interface.
@@ -160,26 +96,6 @@ impl JsValue {
         // 7. Return iteratorRecord.
         Ok(IteratorRecord::new(iterator, next_method))
     }
-}
-
-/// Create the `%IteratorPrototype%` object
-///
-/// More information:
-///  - [ECMA reference][spec]
-///
-/// [spec]: https://tc39.es/ecma262/#sec-%iteratorprototype%-object
-fn create_iterator_prototype(context: &mut Context) -> JsObject {
-    let _timer = Profiler::global().start_event("Iterator Prototype", "init");
-
-    let symbol_iterator = WellKnownSymbols::iterator();
-    let iterator_prototype = ObjectInitializer::new(context)
-        .function(
-            |v, _, _| Ok(v.clone()),
-            (symbol_iterator, "[Symbol.iterator]"),
-            0,
-        )
-        .build();
-    iterator_prototype
 }
 
 #[derive(Debug)]

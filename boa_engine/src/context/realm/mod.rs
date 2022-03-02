@@ -4,22 +4,28 @@
 //!
 //! A realm is represented in this implementation as a Realm struct with the fields specified from the spec.
 
+mod intrinsics;
+pub(crate) use intrinsics::Intrinsics;
+
 use crate::{
-    environments::{CompileTimeEnvironmentStack, DeclarativeEnvironmentStack},
+    builtins::{self, typed_array::TypedArray},
+    context::environments::{CompileTimeEnvironment, DeclarativeEnvironmentStack},
     object::{GlobalPropertyMap, JsObject, ObjectData, PropertyMap},
 };
 use boa_profiler::Profiler;
+
+use self::intrinsics::{IntrinsicObjects, IteratorPrototypes};
 
 /// Representation of a Realm.
 ///
 /// In the specification these are called Realm Records.
 #[derive(Debug)]
 pub struct Realm {
+    intrinsics: Intrinsics,
     global_object: JsObject,
     pub(crate) global_extensible: bool,
     pub(crate) global_property_map: PropertyMap,
-    pub(crate) environments: DeclarativeEnvironmentStack,
-    pub(crate) compile_env: CompileTimeEnvironmentStack,
+    pub(crate) global_env: CompileTimeEnvironment,
 }
 
 impl Realm {
@@ -31,13 +37,33 @@ impl Realm {
         // Allow identification of the global object easily
         let global_object = JsObject::from_proto_and_data(None, ObjectData::global());
 
-        Self {
+        let realm = Self {
+            intrinsics: Intrinsics::default(),
             global_object,
             global_extensible: true,
             global_property_map: PropertyMap::default(),
-            environments: DeclarativeEnvironmentStack::new(),
-            compile_env: CompileTimeEnvironmentStack::new(),
-        }
+            global_env: CompileTimeEnvironment::default(),
+        };
+
+        // Add new builtIns to Realm
+        // At a later date this can be removed from here and called explicitly,
+        // but for now we almost always want these default builtins
+        let typed_array_constructor_constructor = TypedArray::init(&mut realm);
+        realm.intrinsics.typed_array_constructor.constructor = typed_array_constructor_constructor;
+        realm.intrinsics.typed_array_constructor.prototype = realm
+            .intrinsics
+            .standard_objects
+            .typed_array_object()
+            .prototype
+            .clone();
+        realm.intrinsics.iterator_prototypes = IteratorPrototypes::init(&mut realm);
+
+        // Create intrinsics, add global objects here
+        builtins::init(realm);
+
+        realm.intrinsics.intrinsic_objects = IntrinsicObjects::init(&mut realm);
+
+        realm
     }
 
     #[inline]
@@ -58,7 +84,7 @@ impl Realm {
     /// Set the number of bindings on the global environment.
     #[inline]
     pub(crate) fn set_global_binding_number(&mut self) {
-        let binding_number = self.compile_env.get_binding_number();
-        self.environments.set_global_binding_number(binding_number);
+        let binding_number = self.global_env.get_binding_number();
+        self.global_env.set_global_binding_number(binding_number);
     }
 }

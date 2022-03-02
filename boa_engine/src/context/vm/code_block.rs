@@ -10,13 +10,16 @@ use crate::{
         },
         generator::{Generator, GeneratorContext, GeneratorState},
     },
-    context::StandardObjects,
-    environments::{BindingLocator, DeclarativeEnvironmentStack},
+    context::{
+        environments::{BindingLocator, DeclarativeEnvironmentStack},
+        vm,
+        vm::call_frame::GeneratorResumeKind,
+        vm::{call_frame::FinallyReturn, CallFrame, Opcode},
+        StandardObjects,
+    },
     object::{internal_methods::get_prototype_from_constructor, JsObject, ObjectData},
     property::PropertyDescriptor,
     syntax::ast::node::FormalParameterList,
-    vm::call_frame::GeneratorResumeKind,
-    vm::{call_frame::FinallyReturn, CallFrame, Opcode},
     Context, JsResult, JsValue,
 };
 use boa_gc::{Cell, Finalize, Gc, Trace};
@@ -669,7 +672,7 @@ impl JsObject {
                     finally_jump: Vec::new(),
                     pop_on_return: 0,
                     loop_env_stack: vec![0],
-                    try_env_stack: vec![crate::vm::TryStackEntry {
+                    try_env_stack: vec![vm::TryStackEntry {
                         num_env: 0,
                         num_loop_stack_entries: 0,
                     }],
@@ -764,7 +767,7 @@ impl JsObject {
                     finally_jump: Vec::new(),
                     pop_on_return: 0,
                     loop_env_stack: vec![0],
-                    try_env_stack: vec![crate::vm::TryStackEntry {
+                    try_env_stack: vec![vm::TryStackEntry {
                         num_env: 0,
                         num_loop_stack_entries: 0,
                     }],
@@ -949,7 +952,7 @@ impl JsObject {
                     finally_jump: Vec::new(),
                     pop_on_return: 0,
                     loop_env_stack: vec![0],
-                    try_env_stack: vec![crate::vm::TryStackEntry {
+                    try_env_stack: vec![vm::TryStackEntry {
                         num_env: 0,
                         num_loop_stack_entries: 0,
                     }],
