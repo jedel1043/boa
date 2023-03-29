@@ -2467,6 +2467,7 @@
 <span class="kw">pub use </span>jsobject::{RecursionLimiter, Ref, RefMut};
 <span class="kw">pub use </span>operations::IntegrityLevel;
 <span class="kw">pub use </span>property_map::<span class="kw-2">*</span>;
+<span class="kw">use </span>thin_vec::ThinVec;
 
 <span class="kw">use </span><span class="self">self</span>::internal_methods::{
     arguments::ARGUMENTS_EXOTIC_INTERNAL_METHODS,
@@ -2535,7 +2536,6 @@
 
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">use </span>builtins::<span class="kw-2">*</span>;
 
-<span class="kw">pub use </span>builtins::jsproxy::JsProxyBuilder;
 <span class="kw">pub use </span>jsobject::<span class="kw-2">*</span>;
 
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">trait </span>JsObjectType:
@@ -2589,7 +2589,7 @@
     <span class="doccomment">/// Whether it can have new properties added to it.
     </span>extensible: bool,
     <span class="doccomment">/// The `[[PrivateElements]]` internal slot.
-    </span>private_elements: Vec&lt;(PrivateName, PrivateElement)&gt;,
+    </span>private_elements: ThinVec&lt;(PrivateName, PrivateElement)&gt;,
 }
 
 <span class="kw">unsafe impl </span>Trace <span class="kw">for </span>Object {
@@ -3243,7 +3243,7 @@
             properties: PropertyMap::default(),
             prototype: <span class="prelude-val">None</span>,
             extensible: <span class="bool-val">true</span>,
-            private_elements: Vec::default(),
+            private_elements: ThinVec::default(),
         }
     }
 }
