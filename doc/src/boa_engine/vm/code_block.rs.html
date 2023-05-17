@@ -1308,6 +1308,62 @@
 <a href="#1307" id="1307">1307</a>
 <a href="#1308" id="1308">1308</a>
 <a href="#1309" id="1309">1309</a>
+<a href="#1310" id="1310">1310</a>
+<a href="#1311" id="1311">1311</a>
+<a href="#1312" id="1312">1312</a>
+<a href="#1313" id="1313">1313</a>
+<a href="#1314" id="1314">1314</a>
+<a href="#1315" id="1315">1315</a>
+<a href="#1316" id="1316">1316</a>
+<a href="#1317" id="1317">1317</a>
+<a href="#1318" id="1318">1318</a>
+<a href="#1319" id="1319">1319</a>
+<a href="#1320" id="1320">1320</a>
+<a href="#1321" id="1321">1321</a>
+<a href="#1322" id="1322">1322</a>
+<a href="#1323" id="1323">1323</a>
+<a href="#1324" id="1324">1324</a>
+<a href="#1325" id="1325">1325</a>
+<a href="#1326" id="1326">1326</a>
+<a href="#1327" id="1327">1327</a>
+<a href="#1328" id="1328">1328</a>
+<a href="#1329" id="1329">1329</a>
+<a href="#1330" id="1330">1330</a>
+<a href="#1331" id="1331">1331</a>
+<a href="#1332" id="1332">1332</a>
+<a href="#1333" id="1333">1333</a>
+<a href="#1334" id="1334">1334</a>
+<a href="#1335" id="1335">1335</a>
+<a href="#1336" id="1336">1336</a>
+<a href="#1337" id="1337">1337</a>
+<a href="#1338" id="1338">1338</a>
+<a href="#1339" id="1339">1339</a>
+<a href="#1340" id="1340">1340</a>
+<a href="#1341" id="1341">1341</a>
+<a href="#1342" id="1342">1342</a>
+<a href="#1343" id="1343">1343</a>
+<a href="#1344" id="1344">1344</a>
+<a href="#1345" id="1345">1345</a>
+<a href="#1346" id="1346">1346</a>
+<a href="#1347" id="1347">1347</a>
+<a href="#1348" id="1348">1348</a>
+<a href="#1349" id="1349">1349</a>
+<a href="#1350" id="1350">1350</a>
+<a href="#1351" id="1351">1351</a>
+<a href="#1352" id="1352">1352</a>
+<a href="#1353" id="1353">1353</a>
+<a href="#1354" id="1354">1354</a>
+<a href="#1355" id="1355">1355</a>
+<a href="#1356" id="1356">1356</a>
+<a href="#1357" id="1357">1357</a>
+<a href="#1358" id="1358">1358</a>
+<a href="#1359" id="1359">1359</a>
+<a href="#1360" id="1360">1360</a>
+<a href="#1361" id="1361">1361</a>
+<a href="#1362" id="1362">1362</a>
+<a href="#1363" id="1363">1363</a>
+<a href="#1364" id="1364">1364</a>
+<a href="#1365" id="1365">1365</a>
 </pre><pre class="rust"><code><span class="doccomment">//! `CodeBlock`
 //!
 //! This module is for the `CodeBlock` which implements a function representation in the VM
@@ -1320,22 +1376,15 @@
         promise::PromiseCapability,
     },
     context::intrinsics::StandardConstructors,
-    environments::{BindingLocator, CompileTimeEnvironment},
+    environments::{BindingLocator, CompileTimeEnvironment, FunctionSlots, ThisBindingStatus},
     error::JsNativeError,
-    object::{
-        internal_methods::get_prototype_from_constructor, JsObject, ObjectData, CONSTRUCTOR,
-        PROTOTYPE,
-    },
+    object::{internal_methods::get_prototype_from_constructor, JsObject, ObjectData, PROTOTYPE},
     property::PropertyDescriptor,
-    realm::Realm,
     string::utf16,
     vm::CallFrame,
     Context, JsError, JsResult, JsString, JsValue,
 };
-<span class="kw">use </span>boa_ast::{
-    expression::Identifier,
-    function::{FormalParameterList, PrivateName},
-};
+<span class="kw">use </span>boa_ast::function::{FormalParameterList, PrivateName};
 <span class="kw">use </span>boa_gc::{Finalize, Gc, GcRefCell, Trace};
 <span class="kw">use </span>boa_interner::Sym;
 <span class="kw">use </span>boa_profiler::Profiler;
@@ -1403,8 +1452,7 @@
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) literals: Box&lt;[JsValue]&gt;,
 
     <span class="doccomment">/// Property field names.
-    </span><span class="attr">#[unsafe_ignore_trace]
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) names: Box&lt;[Identifier]&gt;,
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) names: Box&lt;[JsString]&gt;,
 
     <span class="doccomment">/// Private names.
     </span><span class="attr">#[unsafe_ignore_trace]
@@ -1449,8 +1497,9 @@
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) trace: std::cell::Cell&lt;bool&gt;,
 }
 
-<span class="kw">impl </span>CodeBlock {
-    <span class="doccomment">/// Constructs a new `CodeBlock`.
+<span class="doccomment">/// ---- `CodeBlock` public API ----
+</span><span class="kw">impl </span>CodeBlock {
+    <span class="doccomment">/// Creates a new `CodeBlock`.
     </span><span class="attr">#[must_use]
     </span><span class="kw">pub fn </span>new(name: Sym, length: u32, strict: bool) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
@@ -1478,13 +1527,22 @@
         }
     }
 
+    <span class="doccomment">/// Retrieves the name associated with this code block.
+    </span><span class="attr">#[must_use]
+    </span><span class="kw">pub const fn </span>name(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Sym {
+        <span class="self">self</span>.name
+    }
+
     <span class="doccomment">/// Enable or disable instruction tracing to `stdout`.
     </span><span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
     #[inline]
     </span><span class="kw">pub fn </span>set_trace(<span class="kw-2">&amp;</span><span class="self">self</span>, value: bool) {
         <span class="self">self</span>.trace.set(value);
     }
+}
 
+<span class="doccomment">/// ---- `CodeBlock` private API ----
+</span><span class="kw">impl </span>CodeBlock {
     <span class="doccomment">/// Read type T from code.
     ///
     /// # Safety
@@ -1587,33 +1645,40 @@
             | Opcode::SuperCall
             | Opcode::IteratorUnwrapNextOrJump
             | Opcode::ConcatToString
+            | Opcode::GeneratorAsyncResumeYield
             | Opcode::GeneratorNextDelegate =&gt; {
                 <span class="kw">let </span>result = <span class="self">self</span>.read::&lt;u32&gt;(<span class="kw-2">*</span>pc).to_string();
                 <span class="kw-2">*</span>pc += size_of::&lt;u32&gt;();
                 result
             }
-
             Opcode::PushDeclarativeEnvironment
             | Opcode::PushFunctionEnvironment
             | Opcode::CopyDataProperties
             | Opcode::Break
             | Opcode::Continue
-            | Opcode::LoopContinue
             | Opcode::LoopStart
             | Opcode::TryStart
-            | Opcode::AsyncGeneratorNext =&gt; {
+            | Opcode::AsyncGeneratorNext
+            | Opcode::GeneratorAsyncDelegateNext =&gt; {
                 <span class="kw">let </span>operand1 = <span class="self">self</span>.read::&lt;u32&gt;(<span class="kw-2">*</span>pc);
                 <span class="kw-2">*</span>pc += size_of::&lt;u32&gt;();
                 <span class="kw">let </span>operand2 = <span class="self">self</span>.read::&lt;u32&gt;(<span class="kw-2">*</span>pc);
                 <span class="kw-2">*</span>pc += size_of::&lt;u32&gt;();
                 <span class="macro">format!</span>(<span class="string">&quot;{operand1}, {operand2}&quot;</span>)
             }
+            Opcode::GeneratorAsyncDelegateResume =&gt; {
+                <span class="kw">let </span>operand1 = <span class="self">self</span>.read::&lt;u32&gt;(<span class="kw-2">*</span>pc);
+                <span class="kw-2">*</span>pc += size_of::&lt;u32&gt;();
+                <span class="kw">let </span>operand2 = <span class="self">self</span>.read::&lt;u32&gt;(<span class="kw-2">*</span>pc);
+                <span class="kw-2">*</span>pc += size_of::&lt;u32&gt;();
+                <span class="kw">let </span>operand3 = <span class="self">self</span>.read::&lt;u32&gt;(<span class="kw-2">*</span>pc);
+                <span class="kw-2">*</span>pc += size_of::&lt;u32&gt;();
+                <span class="macro">format!</span>(<span class="string">&quot;{operand1}, {operand2}, {operand3}&quot;</span>)
+            }
             Opcode::GetArrowFunction
             | Opcode::GetAsyncArrowFunction
             | Opcode::GetFunction
-            | Opcode::GetFunctionAsync
-            | Opcode::GetGenerator
-            | Opcode::GetGeneratorAsync =&gt; {
+            | Opcode::GetFunctionAsync =&gt; {
                 <span class="kw">let </span>operand = <span class="self">self</span>.read::&lt;u32&gt;(<span class="kw-2">*</span>pc);
                 <span class="kw-2">*</span>pc += size_of::&lt;u32&gt;() + size_of::&lt;u8&gt;();
                 <span class="macro">format!</span>(
@@ -1622,13 +1687,20 @@
                     <span class="self">self</span>.functions[operand <span class="kw">as </span>usize].length
                 )
             }
-            Opcode::DefInitArg
-            | Opcode::DefVar
+            Opcode::GetGenerator | Opcode::GetGeneratorAsync =&gt; {
+                <span class="kw">let </span>operand = <span class="self">self</span>.read::&lt;u32&gt;(<span class="kw-2">*</span>pc);
+                <span class="macro">format!</span>(
+                    <span class="string">&quot;{operand:04}: &#39;{}&#39; (length: {})&quot;</span>,
+                    interner.resolve_expect(<span class="self">self</span>.functions[operand <span class="kw">as </span>usize].name),
+                    <span class="self">self</span>.functions[operand <span class="kw">as </span>usize].length
+                )
+            }
+            Opcode::DefVar
             | Opcode::DefInitVar
-            | Opcode::DefLet
-            | Opcode::DefInitLet
-            | Opcode::DefInitConst
+            | Opcode::PutLexicalValue
             | Opcode::GetName
+            | Opcode::GetLocator
+            | Opcode::GetNameAndLocator
             | Opcode::GetNameOrUndefined
             | Opcode::SetName
             | Opcode::DeleteName =&gt; {
@@ -1657,7 +1729,7 @@
                 <span class="kw-2">*</span>pc += size_of::&lt;u32&gt;();
                 <span class="macro">format!</span>(
                     <span class="string">&quot;{operand:04}: &#39;{}&#39;&quot;</span>,
-                    interner.resolve_expect(<span class="self">self</span>.names[operand <span class="kw">as </span>usize].sym()),
+                    <span class="self">self</span>.names[operand <span class="kw">as </span>usize].to_std_string_escaped(),
                 )
             }
             Opcode::SetPrivateField
@@ -1753,10 +1825,13 @@
             | Opcode::Return
             | Opcode::PopEnvironment
             | Opcode::LoopEnd
+            | Opcode::LoopContinue
+            | Opcode::LoopUpdateReturnValue
             | Opcode::LabelledEnd
             | Opcode::CreateForInIterator
             | Opcode::GetIterator
             | Opcode::GetAsyncIterator
+            | Opcode::GeneratorResumeReturn
             | Opcode::IteratorNext
             | Opcode::IteratorNextSetDone
             | Opcode::IteratorUnwrapNext
@@ -1788,6 +1863,7 @@
             | Opcode::SetPrototype
             | Opcode::PushObjectEnvironment
             | Opcode::IsObject
+            | Opcode::SetNameByLocator
             | Opcode::Nop =&gt; String::new(),
         }
     }
@@ -1865,60 +1941,36 @@
 }
 
 <span class="doccomment">/// Creates a new function object.
+///
+/// This is used in cases that the prototype is not known if it&#39;s [`None`] or [`Some`].
+///
+/// If the prototype given is [`None`] it will use [`create_function_object_fast`]. Otherwise
+/// it will construct the function from template objects that have all the fields except the
+/// prototype, and will perform a prototype transition change to set the prototype.
+///
+/// This is slower than direct object template construction that is done in [`create_function_object_fast`].
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>create_function_object(
     code: Gc&lt;CodeBlock&gt;,
     r#async: bool,
-    arrow: bool,
-    prototype: <span class="prelude-ty">Option</span>&lt;JsObject&gt;,
-    method: bool,
+    prototype: JsObject,
     context: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">&#39;_</span>&gt;,
 ) -&gt; JsObject {
-    <span class="kw">let </span>_timer = Profiler::global().start_event(<span class="string">&quot;JsVmFunction::new&quot;</span>, <span class="string">&quot;vm&quot;</span>);
+    <span class="kw">let </span>_timer = Profiler::global().start_event(<span class="string">&quot;create_function_object&quot;</span>, <span class="string">&quot;vm&quot;</span>);
 
-    <span class="kw">let </span>function_prototype = <span class="kw">if let </span><span class="prelude-val">Some</span>(prototype) = prototype {
-        prototype
-    } <span class="kw">else if </span>r#async {
-        context
-            .intrinsics()
-            .constructors()
-            .async_function()
-            .prototype()
-    } <span class="kw">else </span>{
-        context.intrinsics().constructors().function().prototype()
-    };
+    <span class="kw">let </span>name: JsValue = context
+        .interner()
+        .resolve_expect(code.name)
+        .into_common::&lt;JsString&gt;(<span class="bool-val">false</span>)
+        .into();
 
-    <span class="kw">let </span>name_property = PropertyDescriptor::builder()
-        .value(
-            context
-                .interner()
-                .resolve_expect(code.name)
-                .into_common::&lt;JsString&gt;(<span class="bool-val">false</span>),
-        )
-        .writable(<span class="bool-val">false</span>)
-        .enumerable(<span class="bool-val">false</span>)
-        .configurable(<span class="bool-val">true</span>)
-        .build();
-
-    <span class="kw">let </span>length_property = PropertyDescriptor::builder()
-        .value(code.length)
-        .writable(<span class="bool-val">false</span>)
-        .enumerable(<span class="bool-val">false</span>)
-        .configurable(<span class="bool-val">true</span>)
-        .build();
+    <span class="kw">let </span>length: JsValue = code.length.into();
 
     <span class="kw">let </span>function = <span class="kw">if </span>r#async {
-        <span class="kw">let </span>promise_capability = PromiseCapability::new(
-            <span class="kw-2">&amp;</span>context.intrinsics().constructors().promise().constructor(),
-            context,
-        )
-        .expect(<span class="string">&quot;cannot  fail per spec&quot;</span>);
-
         Function::new(
             FunctionKind::Async {
                 code,
                 environments: context.vm.environments.clone(),
                 home_object: <span class="prelude-val">None</span>,
-                promise_capability,
                 class_object: <span class="prelude-val">None</span>,
             },
             context.realm().clone(),
@@ -1938,48 +1990,120 @@
         )
     };
 
-    <span class="kw">let </span>constructor =
-        JsObject::from_proto_and_data(function_prototype, ObjectData::function(function));
+    <span class="kw">let </span>data = ObjectData::function(function, !r#async);
 
-    <span class="kw">let </span>constructor_property = PropertyDescriptor::builder()
-        .value(constructor.clone())
-        .writable(<span class="bool-val">true</span>)
-        .enumerable(<span class="bool-val">false</span>)
-        .configurable(<span class="bool-val">true</span>)
-        .build();
+    <span class="kw">let </span>templates = context.intrinsics().templates();
 
-    constructor
-        .define_property_or_throw(<span class="macro">utf16!</span>(<span class="string">&quot;length&quot;</span>), length_property, context)
-        .expect(<span class="string">&quot;failed to define the length property of the function&quot;</span>);
-    constructor
-        .define_property_or_throw(<span class="macro">utf16!</span>(<span class="string">&quot;name&quot;</span>), name_property, context)
-        .expect(<span class="string">&quot;failed to define the name property of the function&quot;</span>);
+    <span class="kw">let </span>(<span class="kw-2">mut </span>template, storage, constructor_prototype) = <span class="kw">if </span>r#async {
+        (
+            templates.function_without_proto().clone(),
+            <span class="macro">vec!</span>[length, name],
+            <span class="prelude-val">None</span>,
+        )
+    } <span class="kw">else </span>{
+        <span class="kw">let </span>constructor_prototype = templates
+            .function_prototype()
+            .create(ObjectData::ordinary(), <span class="macro">vec!</span>[JsValue::undefined()]);
 
-    <span class="kw">if </span>!r#async &amp;&amp; !arrow &amp;&amp; !method {
-        <span class="kw">let </span>prototype = JsObject::with_object_proto(context.intrinsics());
-        prototype
-            .define_property_or_throw(CONSTRUCTOR, constructor_property, context)
-            .expect(<span class="string">&quot;failed to define the constructor property of the function&quot;</span>);
+        <span class="kw">let </span>template = templates.function_with_prototype_without_proto();
 
-        <span class="kw">let </span>prototype_property = PropertyDescriptor::builder()
-            .value(prototype)
-            .writable(<span class="bool-val">true</span>)
-            .enumerable(<span class="bool-val">false</span>)
-            .configurable(<span class="bool-val">false</span>)
-            .build();
-        constructor
-            .define_property_or_throw(PROTOTYPE, prototype_property, context)
-            .expect(<span class="string">&quot;failed to define the prototype property of the function&quot;</span>);
+        (
+            template.clone(),
+            <span class="macro">vec!</span>[length, name, constructor_prototype.clone().into()],
+            <span class="prelude-val">Some</span>(constructor_prototype),
+        )
+    };
+
+    template.set_prototype(prototype);
+
+    <span class="kw">let </span>constructor = template.create(data, storage);
+
+    <span class="kw">if let </span><span class="prelude-val">Some</span>(constructor_prototype) = <span class="kw-2">&amp;</span>constructor_prototype {
+        constructor_prototype.borrow_mut().properties_mut().storage[<span class="number">0</span>] = constructor.clone().into();
     }
-
     constructor
+}
+
+<span class="doccomment">/// Creates a new function object.
+///
+/// This is prefered over [`create_function_object`] if prototype is [`None`],
+/// because it constructs the funtion from a pre-initialized object template,
+/// with all the properties and prototype set.
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>create_function_object_fast(
+    code: Gc&lt;CodeBlock&gt;,
+    r#async: bool,
+    arrow: bool,
+    method: bool,
+    context: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">&#39;_</span>&gt;,
+) -&gt; JsObject {
+    <span class="kw">let </span>_timer = Profiler::global().start_event(<span class="string">&quot;create_function_object_fast&quot;</span>, <span class="string">&quot;vm&quot;</span>);
+
+    <span class="kw">let </span>name: JsValue = context
+        .interner()
+        .resolve_expect(code.name)
+        .into_common::&lt;JsString&gt;(<span class="bool-val">false</span>)
+        .into();
+
+    <span class="kw">let </span>length: JsValue = code.length.into();
+
+    <span class="kw">let </span>function = <span class="kw">if </span>r#async {
+        FunctionKind::Async {
+            code,
+            environments: context.vm.environments.clone(),
+            home_object: <span class="prelude-val">None</span>,
+            class_object: <span class="prelude-val">None</span>,
+        }
+    } <span class="kw">else </span>{
+        FunctionKind::Ordinary {
+            code,
+            environments: context.vm.environments.clone(),
+            constructor_kind: ConstructorKind::Base,
+            home_object: <span class="prelude-val">None</span>,
+            fields: ThinVec::new(),
+            private_methods: ThinVec::new(),
+            class_object: <span class="prelude-val">None</span>,
+        }
+    };
+
+    <span class="kw">let </span>function = Function::new(function, context.realm().clone());
+
+    <span class="kw">let </span>data = ObjectData::function(function, !method &amp;&amp; !arrow &amp;&amp; !r#async);
+
+    <span class="kw">if </span>r#async {
+        context
+            .intrinsics()
+            .templates()
+            .async_function()
+            .create(data, <span class="macro">vec!</span>[length, name])
+    } <span class="kw">else if </span>arrow || method {
+        context
+            .intrinsics()
+            .templates()
+            .function()
+            .create(data, <span class="macro">vec!</span>[length, name])
+    } <span class="kw">else </span>{
+        <span class="kw">let </span>prototype = context
+            .intrinsics()
+            .templates()
+            .function_prototype()
+            .create(ObjectData::ordinary(), <span class="macro">vec!</span>[JsValue::undefined()]);
+
+        <span class="kw">let </span>constructor = context
+            .intrinsics()
+            .templates()
+            .function_with_prototype()
+            .create(data, <span class="macro">vec!</span>[length, name, prototype.clone().into()]);
+
+        prototype.borrow_mut().properties_mut().storage[<span class="number">0</span>] = constructor.clone().into();
+
+        constructor
+    }
 }
 
 <span class="doccomment">/// Creates a new generator function object.
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>create_generator_function_object(
     code: Gc&lt;CodeBlock&gt;,
     r#async: bool,
-    method: bool,
     prototype: <span class="prelude-ty">Option</span>&lt;JsObject&gt;,
     context: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">&#39;_</span>&gt;,
 ) -&gt; JsObject {
@@ -2018,7 +2142,8 @@
         .configurable(<span class="bool-val">true</span>)
         .build();
 
-    <span class="kw">let </span>prototype = JsObject::from_proto_and_data(
+    <span class="kw">let </span>prototype = JsObject::from_proto_and_data_with_shared_shape(
+        context.root_shape(),
         <span class="kw">if </span>r#async {
             context.intrinsics().objects().async_generator()
         } <span class="kw">else </span>{
@@ -2037,7 +2162,8 @@
             },
             context.realm().clone(),
         );
-        JsObject::from_proto_and_data(
+        JsObject::from_proto_and_data_with_shared_shape(
+            context.root_shape(),
             function_prototype,
             ObjectData::async_generator_function(function),
         )
@@ -2051,7 +2177,11 @@
             },
             context.realm().clone(),
         );
-        JsObject::from_proto_and_data(function_prototype, ObjectData::generator_function(function))
+        JsObject::from_proto_and_data_with_shared_shape(
+            context.root_shape(),
+            function_prototype,
+            ObjectData::generator_function(function),
+        )
     };
 
     <span class="kw">let </span>prototype_property = PropertyDescriptor::builder()
@@ -2061,11 +2191,9 @@
         .configurable(<span class="bool-val">false</span>)
         .build();
 
-    <span class="kw">if </span>!method {
-        constructor
-            .define_property_or_throw(PROTOTYPE, prototype_property, context)
-            .expect(<span class="string">&quot;failed to define the prototype property of the generator function&quot;</span>);
-    }
+    constructor
+        .define_property_or_throw(PROTOTYPE, prototype_property, context)
+        .expect(<span class="string">&quot;failed to define the prototype property of the generator function&quot;</span>);
     constructor
         .define_property_or_throw(<span class="macro">utf16!</span>(<span class="string">&quot;name&quot;</span>), name_property, context)
         .expect(<span class="string">&quot;failed to define the name property of the generator function&quot;</span>);
@@ -2076,49 +2204,6 @@
     constructor
 }
 
-<span class="kw">struct </span>ContextCleanupGuard&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;host</span>&gt; {
-    context: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>Context&lt;<span class="lifetime">&#39;host</span>&gt;,
-    old_realm: Realm,
-    old_active_function: <span class="prelude-ty">Option</span>&lt;JsObject&gt;,
-}
-
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;host</span>&gt; ContextCleanupGuard&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;host</span>&gt; {
-    <span class="doccomment">/// Creates a new guard that resets the realm of the context on exit.
-    </span><span class="kw">fn </span>new(context: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>Context&lt;<span class="lifetime">&#39;host</span>&gt;, realm: Realm, active_function: JsObject) -&gt; <span class="self">Self </span>{
-        <span class="kw">let </span>old_realm = context.enter_realm(realm);
-        <span class="kw">let </span>old_active_function = context.vm.active_function.replace(active_function);
-        <span class="self">Self </span>{
-            context,
-            old_realm,
-            old_active_function,
-        }
-    }
-}
-
-<span class="kw">impl </span>Drop <span class="kw">for </span>ContextCleanupGuard&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt; {
-    <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="self">self</span>.context.enter_realm(<span class="self">self</span>.old_realm.clone());
-        std::mem::swap(
-            <span class="kw-2">&amp;mut </span><span class="self">self</span>.context.vm.active_function,
-            <span class="kw-2">&amp;mut </span><span class="self">self</span>.old_active_function,
-        );
-    }
-}
-
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;host</span>&gt; std::ops::Deref <span class="kw">for </span>ContextCleanupGuard&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;host</span>&gt; {
-    <span class="kw">type </span>Target = Context&lt;<span class="lifetime">&#39;host</span>&gt;;
-
-    <span class="kw">fn </span>deref(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="self">Self</span>::Target {
-        <span class="self">self</span>.context
-    }
-}
-
-<span class="kw">impl </span>std::ops::DerefMut <span class="kw">for </span>ContextCleanupGuard&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt; {
-    <span class="kw">fn </span>deref_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self</span>::Target {
-        <span class="self">self</span>.context
-    }
-}
-
 <span class="kw">impl </span>JsObject {
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>call_internal(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
@@ -2126,110 +2211,120 @@
         args: <span class="kw-2">&amp;</span>[JsValue],
         context: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">&#39;_</span>&gt;,
     ) -&gt; JsResult&lt;JsValue&gt; {
+        <span class="kw">let </span>old_realm = context.realm().clone();
+        <span class="kw">let </span>old_active_fn = context.vm.active_function.clone();
+
+        <span class="kw">let </span>context = <span class="kw-2">&amp;mut </span>context.guard(<span class="kw">move </span>|ctx| {
+            ctx.enter_realm(old_realm);
+            ctx.vm.active_function = old_active_fn;
+        });
+
         <span class="kw">let </span>this_function_object = <span class="self">self</span>.clone();
         <span class="kw">let </span>active_function = <span class="self">self</span>.clone();
         <span class="kw">let </span>object = <span class="self">self</span>.borrow();
         <span class="kw">let </span>function_object = object.as_function().expect(<span class="string">&quot;not a function&quot;</span>);
         <span class="kw">let </span>realm = function_object.realm().clone();
 
-        <span class="kw">let </span>context = <span class="kw-2">&amp;mut </span>ContextCleanupGuard::new(context, realm, active_function);
+        context.enter_realm(realm);
+        context.vm.active_function = <span class="prelude-val">Some</span>(active_function);
 
-        <span class="kw">let </span>(code, <span class="kw-2">mut </span>environments, class_object, promise_cap, async_, gen) =
-            <span class="kw">match </span>function_object.kind() {
-                FunctionKind::Native {
-                    function,
-                    constructor,
-                } =&gt; {
-                    <span class="kw">let </span>function = function.clone();
-                    <span class="kw">let </span>constructor = <span class="kw-2">*</span>constructor;
-                    drop(object);
+        <span class="kw">let </span>(code, <span class="kw-2">mut </span>environments, class_object, async_, gen) = <span class="kw">match </span>function_object.kind() {
+            FunctionKind::Native {
+                function,
+                constructor,
+            } =&gt; {
+                <span class="kw">let </span>function = function.clone();
+                <span class="kw">let </span>constructor = <span class="kw-2">*</span>constructor;
+                drop(object);
 
-                    <span class="kw">return if </span>constructor.is_some() {
-                        function.call(<span class="kw-2">&amp;</span>JsValue::undefined(), args, context)
-                    } <span class="kw">else </span>{
-                        function.call(this, args, context)
-                    }
-                    .map_err(|err| err.inject_realm(context.realm().clone()));
+                <span class="kw">return if </span>constructor.is_some() {
+                    function.call(<span class="kw-2">&amp;</span>JsValue::undefined(), args, context)
+                } <span class="kw">else </span>{
+                    function.call(this, args, context)
                 }
-                FunctionKind::Ordinary {
-                    code,
-                    environments,
-                    class_object,
-                    ..
-                } =&gt; {
-                    <span class="kw">let </span>code = code.clone();
-                    <span class="kw">if </span>code.is_class_constructor {
-                        <span class="kw">return </span><span class="prelude-val">Err</span>(JsNativeError::typ()
-                            .with_message(<span class="string">&quot;class constructor cannot be invoked without &#39;new&#39;&quot;</span>)
-                            .with_realm(context.realm().clone())
-                            .into());
-                    }
-                    (
-                        code,
-                        environments.clone(),
-                        class_object.clone(),
-                        <span class="prelude-val">None</span>,
-                        <span class="bool-val">false</span>,
-                        <span class="bool-val">false</span>,
-                    )
+                .map_err(|err| err.inject_realm(context.realm().clone()));
+            }
+            FunctionKind::Ordinary {
+                code,
+                environments,
+                class_object,
+                ..
+            } =&gt; {
+                <span class="kw">let </span>code = code.clone();
+                <span class="kw">if </span>code.is_class_constructor {
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(JsNativeError::typ()
+                        .with_message(<span class="string">&quot;class constructor cannot be invoked without &#39;new&#39;&quot;</span>)
+                        .with_realm(context.realm().clone())
+                        .into());
                 }
-
-                FunctionKind::Async {
+                (
                     code,
-                    environments,
-                    promise_capability,
-                    class_object,
-                    ..
-                } =&gt; (
-                    code.clone(),
                     environments.clone(),
                     class_object.clone(),
-                    <span class="prelude-val">Some</span>(promise_capability.clone()),
-                    <span class="bool-val">true</span>,
                     <span class="bool-val">false</span>,
-                ),
-                FunctionKind::Generator {
-                    code,
-                    environments,
-                    class_object,
-                    ..
-                } =&gt; (
-                    code.clone(),
-                    environments.clone(),
-                    class_object.clone(),
-                    <span class="prelude-val">None</span>,
                     <span class="bool-val">false</span>,
-                    <span class="bool-val">true</span>,
-                ),
-                FunctionKind::AsyncGenerator {
-                    code,
-                    environments,
-                    class_object,
-                    ..
-                } =&gt; (
-                    code.clone(),
-                    environments.clone(),
-                    class_object.clone(),
-                    <span class="prelude-val">None</span>,
-                    <span class="bool-val">true</span>,
-                    <span class="bool-val">true</span>,
-                ),
-            };
+                )
+            }
+            FunctionKind::Async {
+                code,
+                environments,
+                class_object,
+                ..
+            } =&gt; (
+                code.clone(),
+                environments.clone(),
+                class_object.clone(),
+                <span class="bool-val">true</span>,
+                <span class="bool-val">false</span>,
+            ),
+            FunctionKind::Generator {
+                code,
+                environments,
+                class_object,
+                ..
+            } =&gt; (
+                code.clone(),
+                environments.clone(),
+                class_object.clone(),
+                <span class="bool-val">false</span>,
+                <span class="bool-val">true</span>,
+            ),
+            FunctionKind::AsyncGenerator {
+                code,
+                environments,
+                class_object,
+                ..
+            } =&gt; (
+                code.clone(),
+                environments.clone(),
+                class_object.clone(),
+                <span class="bool-val">true</span>,
+                <span class="bool-val">true</span>,
+            ),
+        };
 
         drop(object);
+
+        <span class="kw">let </span>promise_capability = (async_ &amp;&amp; !gen).then(|| {
+            PromiseCapability::new(
+                <span class="kw-2">&amp;</span>context.intrinsics().constructors().promise().constructor(),
+                context,
+            )
+            .expect(<span class="string">&quot;cannot  fail per spec&quot;</span>)
+        });
 
         std::mem::swap(<span class="kw-2">&amp;mut </span>environments, <span class="kw-2">&amp;mut </span>context.vm.environments);
 
         <span class="kw">let </span>lexical_this_mode = code.this_mode == ThisMode::Lexical;
 
         <span class="kw">let </span>this = <span class="kw">if </span>lexical_this_mode {
-            <span class="prelude-val">None
-        </span>} <span class="kw">else if </span>code.strict {
-            <span class="prelude-val">Some</span>(this.clone())
+            ThisBindingStatus::Lexical
+        } <span class="kw">else if </span>code.strict {
+            ThisBindingStatus::Initialized(this.clone())
         } <span class="kw">else if </span>this.is_null_or_undefined() {
-            <span class="prelude-val">Some</span>(context.global_object().into())
+            ThisBindingStatus::Initialized(context.realm().global_this().clone().into())
         } <span class="kw">else </span>{
-            <span class="prelude-val">Some</span>(
+            ThisBindingStatus::Initialized(
                 this.to_object(context)
                     .expect(<span class="string">&quot;conversion cannot fail&quot;</span>)
                     .into(),
@@ -2242,11 +2337,11 @@
             <span class="kw">let </span>index = context
                 .vm
                 .environments
-                .push_declarative(<span class="number">1</span>, code.compile_environments[last_env].clone());
+                .push_lexical(<span class="number">1</span>, code.compile_environments[last_env].clone());
             context
                 .vm
                 .environments
-                .put_value(index, <span class="number">0</span>, class_object.into());
+                .put_lexical_value(index, <span class="number">0</span>, class_object.into());
             last_env -= <span class="number">1</span>;
         }
 
@@ -2254,21 +2349,18 @@
             <span class="kw">let </span>index = context
                 .vm
                 .environments
-                .push_declarative(<span class="number">1</span>, code.compile_environments[last_env].clone());
+                .push_lexical(<span class="number">1</span>, code.compile_environments[last_env].clone());
             context
                 .vm
                 .environments
-                .put_value(index, <span class="number">0</span>, <span class="self">self</span>.clone().into());
+                .put_lexical_value(index, <span class="number">0</span>, <span class="self">self</span>.clone().into());
             last_env -= <span class="number">1</span>;
         }
 
         context.vm.environments.push_function(
             code.num_bindings,
             code.compile_environments[last_env].clone(),
-            this,
-            <span class="self">self</span>.clone(),
-            <span class="prelude-val">None</span>,
-            lexical_this_mode,
+            FunctionSlots::new(this, <span class="self">self</span>.clone(), <span class="prelude-val">None</span>),
         );
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(bindings) = code.parameters_env_bindings {
@@ -2276,7 +2368,7 @@
             context
                 .vm
                 .environments
-                .push_declarative(bindings, code.compile_environments[last_env].clone());
+                .push_lexical(bindings, code.compile_environments[last_env].clone());
         }
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(binding) = code.arguments_binding {
@@ -2288,11 +2380,11 @@
                     <span class="kw-2">&amp;</span>this_function_object,
                     <span class="kw-2">&amp;</span>code.params,
                     args,
-                    <span class="kw-2">&amp;</span>env,
+                    env.declarative_expect(),
                     context,
                 )
             };
-            context.vm.environments.put_value(
+            context.vm.environments.put_lexical_value(
                 binding.environment_index(),
                 binding.binding_index(),
                 arguments_obj.into(),
@@ -2322,7 +2414,7 @@
         <span class="kw">let </span><span class="kw-2">mut </span>frame = CallFrame::new(code)
             .with_param_count(param_count)
             .with_arg_count(arg_count);
-        frame.promise_capability = promise_cap.clone();
+        frame.promise_capability = promise_capability.clone();
 
         context.vm.push_frame(frame);
 
@@ -2335,8 +2427,8 @@
         std::mem::swap(<span class="kw-2">&amp;mut </span>environments, <span class="kw-2">&amp;mut </span>context.vm.environments);
         std::mem::swap(<span class="kw-2">&amp;mut </span>context.vm.stack, <span class="kw-2">&amp;mut </span>stack);
 
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(promise_cap) = promise_cap {
-            <span class="prelude-val">Ok</span>(promise_cap.promise().clone().into())
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(promise_capability) = promise_capability {
+            <span class="prelude-val">Ok</span>(promise_capability.promise().clone().into())
         } <span class="kw">else if </span>gen {
             result<span class="question-mark">?</span>;
             <span class="kw">let </span>proto = this_function_object
@@ -2380,7 +2472,8 @@
                 })
             };
 
-            <span class="kw">let </span>generator = <span class="self">Self</span>::from_proto_and_data(proto, data);
+            <span class="kw">let </span>generator =
+                <span class="self">Self</span>::from_proto_and_data_with_shared_shape(context.root_shape(), proto, data);
 
             <span class="kw">if </span>async_ {
                 <span class="kw">let </span>gen_clone = generator.clone();
@@ -2409,13 +2502,22 @@
         this_target: <span class="kw-2">&amp;</span>JsValue,
         context: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">&#39;_</span>&gt;,
     ) -&gt; JsResult&lt;<span class="self">Self</span>&gt; {
+        <span class="kw">let </span>old_realm = context.realm().clone();
+        <span class="kw">let </span>old_active_fn = context.vm.active_function.clone();
+        <span class="kw">let </span>context = <span class="kw-2">&amp;mut </span>context.guard(<span class="kw">move </span>|ctx| {
+            ctx.enter_realm(old_realm);
+            ctx.vm.active_function = old_active_fn;
+        });
+
         <span class="kw">let </span>this_function_object = <span class="self">self</span>.clone();
         <span class="kw">let </span>active_function = <span class="self">self</span>.clone();
         <span class="kw">let </span>object = <span class="self">self</span>.borrow();
         <span class="kw">let </span>function_object = object.as_function().expect(<span class="string">&quot;not a function&quot;</span>);
         <span class="kw">let </span>realm = function_object.realm().clone();
 
-        <span class="kw">let </span>context = <span class="kw-2">&amp;mut </span>ContextCleanupGuard::new(context, realm, active_function);
+        context.enter_realm(realm);
+        context.vm.active_function = <span class="prelude-val">Some</span>(active_function);
+
         <span class="kw">match </span>function_object.kind() {
             FunctionKind::Native {
                 function,
@@ -2440,7 +2542,11 @@
                                     StandardConstructors::object,
                                     context,
                                 )<span class="question-mark">?</span>;
-                                <span class="prelude-val">Ok</span>(<span class="self">Self</span>::from_proto_and_data(prototype, ObjectData::ordinary()))
+                                <span class="prelude-val">Ok</span>(<span class="self">Self</span>::from_proto_and_data_with_shared_shape(
+                                    context.root_shape(),
+                                    prototype,
+                                    ObjectData::ordinary(),
+                                ))
                             } <span class="kw">else </span>{
                                 <span class="prelude-val">Err</span>(JsNativeError::typ()
                                 .with_message(
@@ -2472,7 +2578,11 @@
                         StandardConstructors::object,
                         context,
                     )<span class="question-mark">?</span>;
-                    <span class="kw">let </span>this = <span class="self">Self</span>::from_proto_and_data(prototype, ObjectData::ordinary());
+                    <span class="kw">let </span>this = <span class="self">Self</span>::from_proto_and_data_with_shared_shape(
+                        context.root_shape(),
+                        prototype,
+                        ObjectData::ordinary(),
+                    );
 
                     this.initialize_instance_elements(<span class="self">self</span>, context)<span class="question-mark">?</span>;
 
@@ -2492,28 +2602,31 @@
                     <span class="kw">let </span>index = context
                         .vm
                         .environments
-                        .push_declarative(<span class="number">1</span>, code.compile_environments[last_env].clone());
+                        .push_lexical(<span class="number">1</span>, code.compile_environments[last_env].clone());
                     context
                         .vm
                         .environments
-                        .put_value(index, <span class="number">0</span>, <span class="self">self</span>.clone().into());
+                        .put_lexical_value(index, <span class="number">0</span>, <span class="self">self</span>.clone().into());
                     last_env -= <span class="number">1</span>;
                 }
 
                 context.vm.environments.push_function(
                     code.num_bindings,
                     code.compile_environments[last_env].clone(),
-                    this.clone().map(Into::into),
-                    <span class="self">self</span>.clone(),
-                    <span class="prelude-val">Some</span>(new_target.clone()),
-                    <span class="bool-val">false</span>,
+                    FunctionSlots::new(
+                        this.clone().map_or(ThisBindingStatus::Uninitialized, |o| {
+                            ThisBindingStatus::Initialized(o.into())
+                        }),
+                        <span class="self">self</span>.clone(),
+                        <span class="prelude-val">Some</span>(new_target.clone()),
+                    ),
                 );
 
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(bindings) = code.parameters_env_bindings {
                     context
                         .vm
                         .environments
-                        .push_declarative(bindings, code.compile_environments[<span class="number">0</span>].clone());
+                        .push_lexical(bindings, code.compile_environments[<span class="number">0</span>].clone());
                 }
 
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(binding) = code.arguments_binding {
@@ -2525,11 +2638,11 @@
                             <span class="kw-2">&amp;</span>this_function_object,
                             <span class="kw-2">&amp;</span>code.params,
                             args,
-                            <span class="kw-2">&amp;</span>env,
+                            env.declarative_expect(),
                             context,
                         )
                     };
-                    context.vm.environments.put_value(
+                    context.vm.environments.put_lexical_value(
                         binding.environment_index(),
                         binding.binding_index(),
                         arguments_obj.into(),
@@ -2594,15 +2707,14 @@
                 } <span class="kw">else </span>{
                     <span class="kw">let </span>function_env = environment
                         .declarative_expect()
-                        .slots()
-                        .expect(<span class="string">&quot;must be function environment&quot;</span>)
-                        .as_function_slots()
+                        .kind()
+                        .as_function()
                         .expect(<span class="string">&quot;must be function environment&quot;</span>);
                     function_env
-                        .borrow()
                         .get_this_binding()
-                        .map(|this| {
-                            this.as_object()
+                        .map(|v| {
+                            v.expect(<span class="string">&quot;constructors cannot be arrow functions&quot;</span>)
+                                .as_object()
                                 .expect(<span class="string">&quot;this binding must be object&quot;</span>)
                                 .clone()
                         })

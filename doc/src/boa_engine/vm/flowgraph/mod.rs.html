@@ -574,6 +574,52 @@
 <a href="#573" id="573">573</a>
 <a href="#574" id="574">574</a>
 <a href="#575" id="575">575</a>
+<a href="#576" id="576">576</a>
+<a href="#577" id="577">577</a>
+<a href="#578" id="578">578</a>
+<a href="#579" id="579">579</a>
+<a href="#580" id="580">580</a>
+<a href="#581" id="581">581</a>
+<a href="#582" id="582">582</a>
+<a href="#583" id="583">583</a>
+<a href="#584" id="584">584</a>
+<a href="#585" id="585">585</a>
+<a href="#586" id="586">586</a>
+<a href="#587" id="587">587</a>
+<a href="#588" id="588">588</a>
+<a href="#589" id="589">589</a>
+<a href="#590" id="590">590</a>
+<a href="#591" id="591">591</a>
+<a href="#592" id="592">592</a>
+<a href="#593" id="593">593</a>
+<a href="#594" id="594">594</a>
+<a href="#595" id="595">595</a>
+<a href="#596" id="596">596</a>
+<a href="#597" id="597">597</a>
+<a href="#598" id="598">598</a>
+<a href="#599" id="599">599</a>
+<a href="#600" id="600">600</a>
+<a href="#601" id="601">601</a>
+<a href="#602" id="602">602</a>
+<a href="#603" id="603">603</a>
+<a href="#604" id="604">604</a>
+<a href="#605" id="605">605</a>
+<a href="#606" id="606">606</a>
+<a href="#607" id="607">607</a>
+<a href="#608" id="608">608</a>
+<a href="#609" id="609">609</a>
+<a href="#610" id="610">610</a>
+<a href="#611" id="611">611</a>
+<a href="#612" id="612">612</a>
+<a href="#613" id="613">613</a>
+<a href="#614" id="614">614</a>
+<a href="#615" id="615">615</a>
+<a href="#616" id="616">616</a>
+<a href="#617" id="617">617</a>
+<a href="#618" id="618">618</a>
+<a href="#619" id="619">619</a>
+<a href="#620" id="620">620</a>
+<a href="#621" id="621">621</a>
 </pre><pre class="rust"><code><span class="doccomment">//! This module is responsible for generating the vm instruction flowgraph.
 
 </span><span class="kw">use </span><span class="kw">crate</span>::vm::{CodeBlock, Opcode};
@@ -684,7 +730,6 @@
                         EdgeStyle::Line,
                     );
                 }
-
                 Opcode::JumpIfFalse
                 | Opcode::JumpIfTrue
                 | Opcode::JumpIfNotUndefined
@@ -715,7 +760,7 @@
                     graph.add_node(previous_pc, NodeShape::None, label.into(), Color::Red);
                     graph.add_edge(previous_pc, pc, <span class="prelude-val">None</span>, Color::None, EdgeStyle::Line);
                 }
-                Opcode::LoopContinue | Opcode::LoopStart =&gt; {
+                Opcode::LoopStart =&gt; {
                     <span class="kw">let </span>start_address = <span class="self">self</span>.read::&lt;u32&gt;(pc);
                     pc += size_of::&lt;u32&gt;();
                     <span class="kw">let </span>end_address = <span class="self">self</span>.read::&lt;u32&gt;(pc);
@@ -795,7 +840,9 @@
                     graph.add_node(previous_pc, NodeShape::None, label.into(), Color::None);
                     graph.add_edge(previous_pc, address, <span class="prelude-val">None</span>, Color::None, EdgeStyle::Line);
                 }
-                Opcode::IteratorUnwrapNextOrJump | Opcode::GeneratorNextDelegate =&gt; {
+                Opcode::IteratorUnwrapNextOrJump
+                | Opcode::GeneratorAsyncResumeYield
+                | Opcode::GeneratorNextDelegate =&gt; {
                     <span class="kw">let </span>address = <span class="self">self</span>.read::&lt;u32&gt;(pc) <span class="kw">as </span>usize;
                     pc += size_of::&lt;u32&gt;();
                     graph.add_node(previous_pc, NodeShape::None, label.into(), Color::None);
@@ -803,6 +850,39 @@
                     graph.add_edge(
                         previous_pc,
                         address,
+                        <span class="prelude-val">Some</span>(<span class="string">&quot;DONE&quot;</span>.into()),
+                        Color::None,
+                        EdgeStyle::Line,
+                    );
+                }
+                Opcode::GeneratorAsyncDelegateNext =&gt; {
+                    <span class="kw">let </span>throw_method_undefined = <span class="self">self</span>.read::&lt;u32&gt;(pc) <span class="kw">as </span>usize;
+                    <span class="kw">let </span>return_method_undefined = <span class="self">self</span>.read::&lt;u32&gt;(pc) <span class="kw">as </span>usize;
+                    graph.add_node(previous_pc, NodeShape::None, label.into(), Color::None);
+                    graph.add_edge(
+                        previous_pc,
+                        throw_method_undefined,
+                        <span class="prelude-val">Some</span>(<span class="string">&quot;throw method undefined&quot;</span>.into()),
+                        Color::None,
+                        EdgeStyle::Line,
+                    );
+                    graph.add_edge(
+                        previous_pc,
+                        return_method_undefined,
+                        <span class="prelude-val">Some</span>(<span class="string">&quot;return method undefined&quot;</span>.into()),
+                        Color::None,
+                        EdgeStyle::Line,
+                    );
+                }
+                Opcode::GeneratorAsyncDelegateResume =&gt; {
+                    <span class="self">self</span>.read::&lt;u32&gt;(pc);
+                    <span class="self">self</span>.read::&lt;u32&gt;(pc);
+                    <span class="kw">let </span>exit = <span class="self">self</span>.read::&lt;u32&gt;(pc) <span class="kw">as </span>usize;
+                    pc += size_of::&lt;u32&gt;();
+                    graph.add_node(previous_pc, NodeShape::None, label.into(), Color::None);
+                    graph.add_edge(
+                        previous_pc,
+                        exit,
                         <span class="prelude-val">Some</span>(<span class="string">&quot;DONE&quot;</span>.into()),
                         Color::None,
                         EdgeStyle::Line,
@@ -922,9 +1002,7 @@
                 Opcode::GetArrowFunction
                 | Opcode::GetAsyncArrowFunction
                 | Opcode::GetFunction
-                | Opcode::GetFunctionAsync
-                | Opcode::GetGenerator
-                | Opcode::GetGeneratorAsync =&gt; {
+                | Opcode::GetFunctionAsync =&gt; {
                     <span class="kw">let </span>operand = <span class="self">self</span>.read::&lt;u32&gt;(pc);
                     <span class="kw">let </span>fn_name = interner
                         .resolve_expect(<span class="self">self</span>.functions[operand <span class="kw">as </span>usize].name)
@@ -937,13 +1015,24 @@
                     graph.add_node(previous_pc, NodeShape::None, label.into(), Color::None);
                     graph.add_edge(previous_pc, pc, <span class="prelude-val">None</span>, Color::None, EdgeStyle::Line);
                 }
-                Opcode::DefInitArg
-                | Opcode::DefVar
+                Opcode::GetGenerator | Opcode::GetGeneratorAsync =&gt; {
+                    <span class="kw">let </span>operand = <span class="self">self</span>.read::&lt;u32&gt;(pc);
+                    <span class="kw">let </span>fn_name = interner
+                        .resolve_expect(<span class="self">self</span>.functions[operand <span class="kw">as </span>usize].name)
+                        .to_string();
+                    <span class="kw">let </span>label = <span class="macro">format!</span>(
+                        <span class="string">&quot;{opcode_str} &#39;{fn_name}&#39; (length: {})&quot;</span>,
+                        <span class="self">self</span>.functions[operand <span class="kw">as </span>usize].length
+                    );
+                    graph.add_node(previous_pc, NodeShape::None, label.into(), Color::None);
+                    graph.add_edge(previous_pc, pc, <span class="prelude-val">None</span>, Color::None, EdgeStyle::Line);
+                }
+                Opcode::DefVar
                 | Opcode::DefInitVar
-                | Opcode::DefLet
-                | Opcode::DefInitLet
-                | Opcode::DefInitConst
+                | Opcode::PutLexicalValue
                 | Opcode::GetName
+                | Opcode::GetLocator
+                | Opcode::GetNameAndLocator
                 | Opcode::GetNameOrUndefined
                 | Opcode::SetName
                 | Opcode::DeleteName =&gt; {
@@ -984,7 +1073,7 @@
                     pc += size_of::&lt;u32&gt;();
                     <span class="kw">let </span>label = <span class="macro">format!</span>(
                         <span class="string">&quot;{opcode_str} &#39;{}&#39;&quot;</span>,
-                        interner.resolve_expect(<span class="self">self</span>.names[operand <span class="kw">as </span>usize].sym()),
+                        <span class="self">self</span>.names[operand <span class="kw">as </span>usize].to_std_string_escaped(),
                     );
                     graph.add_node(previous_pc, NodeShape::None, label.into(), Color::None);
                     graph.add_edge(previous_pc, pc, <span class="prelude-val">None</span>, Color::None, EdgeStyle::Line);
@@ -1073,6 +1162,8 @@
                 | Opcode::This
                 | Opcode::Super
                 | Opcode::LoopEnd
+                | Opcode::LoopContinue
+                | Opcode::LoopUpdateReturnValue
                 | Opcode::LabelledEnd
                 | Opcode::CreateForInIterator
                 | Opcode::GetIterator
@@ -1107,6 +1198,7 @@
                 | Opcode::SuperCallPrepare
                 | Opcode::SetPrototype
                 | Opcode::IsObject
+                | Opcode::SetNameByLocator
                 | Opcode::Nop
                 | Opcode::PushObjectEnvironment =&gt; {
                     graph.add_node(previous_pc, NodeShape::None, label.into(), Color::None);
@@ -1120,7 +1212,7 @@
                     graph.add_node(previous_pc, NodeShape::None, label.into(), Color::None);
                     graph.add_edge(previous_pc, pc, <span class="prelude-val">None</span>, Color::None, EdgeStyle::Line);
                 }
-                Opcode::Return =&gt; {
+                Opcode::Return | Opcode::GeneratorResumeReturn =&gt; {
                     graph.add_node(previous_pc, NodeShape::None, label.into(), Color::None);
                     <span class="kw">if let </span><span class="prelude-val">Some</span>((_try_pc, _next, <span class="prelude-val">Some</span>(finally))) = try_entries.last() {
                         graph.add_edge(

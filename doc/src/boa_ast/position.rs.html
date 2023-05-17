@@ -507,9 +507,9 @@
         <span class="kw">let </span>a = Position::new(<span class="number">10</span>, <span class="number">30</span>);
         <span class="kw">let </span>b = Position::new(<span class="number">10</span>, <span class="number">50</span>);
 
-        <span class="kw">let _ </span>= Span::new(a, b);
-        <span class="kw">let _ </span>= Span::new(a, a);
-        <span class="kw">let _ </span>= Span::from(a);
+        Span::new(a, b);
+        Span::new(a, a);
+        Span::from(a);
     }
 
     <span class="doccomment">/// Checks that the `PartialEq` implementation of `Span` is consistent.

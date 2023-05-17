@@ -938,6 +938,8 @@
 <a href="#937" id="937">937</a>
 <a href="#938" id="938">938</a>
 <a href="#939" id="939">939</a>
+<a href="#940" id="940">940</a>
+<a href="#941" id="941">941</a>
 </pre><pre class="rust"><code><span class="doccomment">//! Boa&#39;s implementation of ECMAScript&#39;s global `Number` object.
 //!
 //! The `Number` ECMAScript object is a wrapper object allowing you to work with numerical values.
@@ -1061,7 +1063,11 @@
         }
         <span class="kw">let </span>prototype =
             get_prototype_from_constructor(new_target, StandardConstructors::number, context)<span class="question-mark">?</span>;
-        <span class="kw">let </span>this = JsObject::from_proto_and_data(prototype, ObjectData::number(data));
+        <span class="kw">let </span>this = JsObject::from_proto_and_data_with_shared_shape(
+            context.root_shape(),
+            prototype,
+            ObjectData::number(data),
+        );
         <span class="prelude-val">Ok</span>(this.into())
     }
 }
@@ -1530,14 +1536,12 @@
                         } <span class="kw">else </span>{
                             <span class="kw">let </span>c: u8 = frac_buf[fraction_cursor];
                             <span class="comment">// Reconstruct digit.
-                            </span><span class="kw">let </span>digit_0 = (c <span class="kw">as </span>char)
-                                .to_digit(<span class="number">10</span>)
-                                .expect(<span class="string">&quot;character was not a valid digit&quot;</span>);
-                            <span class="kw">if </span>digit_0 + <span class="number">1 </span>&gt;= u32::from(radix) {
+                            </span><span class="kw">let </span>digit = <span class="kw">if </span>c &gt; <span class="string">b&#39;9&#39; </span>{ c - <span class="string">b&#39;a&#39; </span>+ <span class="number">10 </span>} <span class="kw">else </span>{ c - <span class="string">b&#39;0&#39; </span>};
+                            <span class="kw">if </span>digit + <span class="number">1 </span>&gt;= radix {
                                 <span class="kw">continue</span>;
                             }
                             frac_buf[fraction_cursor] =
-                                std::char::from_digit(digit_0 + <span class="number">1</span>, u32::from(radix))
+                                std::char::from_digit(u32::from(digit + <span class="number">1</span>), u32::from(radix))
                                     .expect(<span class="string">&quot;digit was not a valid number in the given radix&quot;</span>)
                                     <span class="kw">as </span>u8;
                             fraction_cursor += <span class="number">1</span>;

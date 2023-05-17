@@ -106,6 +106,31 @@
 <a href="#105" id="105">105</a>
 <a href="#106" id="106">106</a>
 <a href="#107" id="107">107</a>
+<a href="#108" id="108">108</a>
+<a href="#109" id="109">109</a>
+<a href="#110" id="110">110</a>
+<a href="#111" id="111">111</a>
+<a href="#112" id="112">112</a>
+<a href="#113" id="113">113</a>
+<a href="#114" id="114">114</a>
+<a href="#115" id="115">115</a>
+<a href="#116" id="116">116</a>
+<a href="#117" id="117">117</a>
+<a href="#118" id="118">118</a>
+<a href="#119" id="119">119</a>
+<a href="#120" id="120">120</a>
+<a href="#121" id="121">121</a>
+<a href="#122" id="122">122</a>
+<a href="#123" id="123">123</a>
+<a href="#124" id="124">124</a>
+<a href="#125" id="125">125</a>
+<a href="#126" id="126">126</a>
+<a href="#127" id="127">127</a>
+<a href="#128" id="128">128</a>
+<a href="#129" id="129">129</a>
+<a href="#130" id="130">130</a>
+<a href="#131" id="131">131</a>
+<a href="#132" id="132">132</a>
 </pre><pre class="rust"><code><span class="kw">use </span>boa_gc::{Gc, GcRefCell};
 
 <span class="kw">use crate</span>::{
@@ -158,6 +183,19 @@
                         GeneratorResumeKind::Normal,
                         context,
                     );
+
+                    <span class="kw">if let </span><span class="prelude-val">Some</span>(async_generator) = gen
+                        .call_frame
+                        .as_ref()
+                        .and_then(|f| f.async_generator.clone())
+                    {
+                        async_generator
+                            .borrow_mut()
+                            .as_async_generator_mut()
+                            .expect(<span class="string">&quot;must be async generator&quot;</span>)
+                            .context = <span class="prelude-val">Some</span>(gen);
+                    }
+
                     <span class="comment">// e. Assert: When we reach this step, asyncContext has already been removed from the execution context stack and prevContext is the currently running execution context.
                     // f. Return undefined.
                     </span><span class="prelude-val">Ok</span>(JsValue::undefined())
@@ -189,6 +227,18 @@
                         GeneratorResumeKind::Throw,
                         context,
                     );
+
+                    <span class="kw">if let </span><span class="prelude-val">Some</span>(async_generator) = gen
+                        .call_frame
+                        .as_ref()
+                        .and_then(|f| f.async_generator.clone())
+                    {
+                        async_generator
+                            .borrow_mut()
+                            .as_async_generator_mut()
+                            .expect(<span class="string">&quot;must be async generator&quot;</span>)
+                            .context = <span class="prelude-val">Some</span>(gen);
+                    }
 
                     <span class="prelude-val">Ok</span>(JsValue::undefined())
                 },

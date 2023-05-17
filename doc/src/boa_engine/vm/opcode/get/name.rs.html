@@ -125,13 +125,10 @@
 <a href="#124" id="124">124</a>
 <a href="#125" id="125">125</a>
 <a href="#126" id="126">126</a>
-<a href="#127" id="127">127</a>
-<a href="#128" id="128">128</a>
 </pre><pre class="rust"><code><span class="kw">use crate</span>::{
     error::JsNativeError,
-    property::DescriptorKind,
     vm::{opcode::Operation, CompletionType},
-    Context, JsResult, JsString, JsValue,
+    Context, JsResult, JsValue,
 };
 
 <span class="doccomment">/// `GetName` implements the Opcode Operation for `Opcode::GetName`
@@ -147,58 +144,70 @@
 
     <span class="kw">fn </span>execute(context: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; JsResult&lt;CompletionType&gt; {
         <span class="kw">let </span>index = context.vm.read::&lt;u32&gt;();
-        <span class="kw">let </span>binding_locator = context.vm.frame().code_block.bindings[index <span class="kw">as </span>usize];
+        <span class="kw">let </span><span class="kw-2">mut </span>binding_locator = context.vm.frame().code_block.bindings[index <span class="kw">as </span>usize];
         binding_locator.throw_mutate_immutable(context)<span class="question-mark">?</span>;
-
-        <span class="kw">let </span>value = <span class="kw">if </span>binding_locator.is_global() {
-            <span class="kw">if let </span><span class="prelude-val">Some</span>(value) = context.get_value_if_global_poisoned(binding_locator.name())<span class="question-mark">? </span>{
-                value
-            } <span class="kw">else </span>{
-                <span class="kw">let </span>key: JsString = context
-                    .interner()
-                    .resolve_expect(binding_locator.name().sym())
-                    .into_common(<span class="bool-val">false</span>);
-                <span class="kw">match </span>context.global_object().get_property(<span class="kw-2">&amp;</span>key.clone().into()) {
-                    <span class="prelude-val">Some</span>(desc) =&gt; <span class="kw">match </span>desc.kind() {
-                        DescriptorKind::Data {
-                            value: <span class="prelude-val">Some</span>(value), ..
-                        } =&gt; value.clone(),
-                        DescriptorKind::Accessor { get: <span class="prelude-val">Some</span>(get), .. } <span class="kw">if </span>!get.is_undefined() =&gt; {
-                            <span class="kw">let </span>get = get.clone();
-                            get.call(<span class="kw-2">&amp;</span>context.global_object().into(), <span class="kw-2">&amp;</span>[], context)<span class="question-mark">?
-                        </span>}
-                        <span class="kw">_ </span>=&gt; {
-                            <span class="kw">return </span><span class="prelude-val">Err</span>(JsNativeError::reference()
-                                .with_message(<span class="macro">format!</span>(
-                                    <span class="string">&quot;{} is not defined&quot;</span>,
-                                    key.to_std_string_escaped()
-                                ))
-                                .into())
-                        }
-                    },
-                    <span class="kw">_ </span>=&gt; {
-                        <span class="kw">return </span><span class="prelude-val">Err</span>(JsNativeError::reference()
-                            .with_message(<span class="macro">format!</span>(<span class="string">&quot;{} is not defined&quot;</span>, key.to_std_string_escaped()))
-                            .into())
-                    }
-                }
-            }
-        } <span class="kw">else if let </span><span class="prelude-val">Some</span>(value) = context.get_value_optional(
-            binding_locator.environment_index(),
-            binding_locator.binding_index(),
-            binding_locator.name(),
-        )<span class="question-mark">? </span>{
-            value
-        } <span class="kw">else </span>{
+        context.find_runtime_binding(<span class="kw-2">&amp;mut </span>binding_locator)<span class="question-mark">?</span>;
+        <span class="kw">let </span>value = context.get_binding(binding_locator)<span class="question-mark">?</span>.ok_or_else(|| {
             <span class="kw">let </span>name = context
                 .interner()
                 .resolve_expect(binding_locator.name().sym())
                 .to_string();
-            <span class="kw">return </span><span class="prelude-val">Err</span>(JsNativeError::reference()
-                .with_message(<span class="macro">format!</span>(<span class="string">&quot;{name} is not initialized&quot;</span>))
-                .into());
-        };
+            JsNativeError::reference().with_message(<span class="macro">format!</span>(<span class="string">&quot;{name} is not defined&quot;</span>))
+        })<span class="question-mark">?</span>;
 
+        context.vm.push(value);
+        <span class="prelude-val">Ok</span>(CompletionType::Normal)
+    }
+}
+
+<span class="doccomment">/// `GetLocator` implements the Opcode Operation for `Opcode::GetLocator`
+///
+/// Operation:
+///  - Find a binding on the environment and set the `current_binding` of the current frame.
+</span><span class="attr">#[derive(Debug, Clone, Copy)]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>GetLocator;
+
+<span class="kw">impl </span>Operation <span class="kw">for </span>GetLocator {
+    <span class="kw">const </span>NAME: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str = <span class="string">&quot;GetLocator&quot;</span>;
+    <span class="kw">const </span>INSTRUCTION: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str = <span class="string">&quot;INST - GetLocator&quot;</span>;
+
+    <span class="kw">fn </span>execute(context: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; JsResult&lt;CompletionType&gt; {
+        <span class="kw">let </span>index = context.vm.read::&lt;u32&gt;();
+        <span class="kw">let </span><span class="kw-2">mut </span>binding_locator = context.vm.frame().code_block.bindings[index <span class="kw">as </span>usize];
+        context.find_runtime_binding(<span class="kw-2">&amp;mut </span>binding_locator)<span class="question-mark">?</span>;
+
+        context.vm.frame_mut().binding_stack.push(binding_locator);
+
+        <span class="prelude-val">Ok</span>(CompletionType::Normal)
+    }
+}
+
+<span class="doccomment">/// `GetNameAndLocator` implements the Opcode Operation for `Opcode::GetNameAndLocator`
+///
+/// Operation:
+///  - Find a binding on the environment chain and push its value to the stack, setting the
+/// `current_binding` of the current frame.
+</span><span class="attr">#[derive(Debug, Clone, Copy)]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>GetNameAndLocator;
+
+<span class="kw">impl </span>Operation <span class="kw">for </span>GetNameAndLocator {
+    <span class="kw">const </span>NAME: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str = <span class="string">&quot;GetNameAndLocator&quot;</span>;
+    <span class="kw">const </span>INSTRUCTION: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str = <span class="string">&quot;INST - GetNameAndLocator&quot;</span>;
+
+    <span class="kw">fn </span>execute(context: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; JsResult&lt;CompletionType&gt; {
+        <span class="kw">let </span>index = context.vm.read::&lt;u32&gt;();
+        <span class="kw">let </span><span class="kw-2">mut </span>binding_locator = context.vm.frame().code_block.bindings[index <span class="kw">as </span>usize];
+        binding_locator.throw_mutate_immutable(context)<span class="question-mark">?</span>;
+        context.find_runtime_binding(<span class="kw-2">&amp;mut </span>binding_locator)<span class="question-mark">?</span>;
+        <span class="kw">let </span>value = context.get_binding(binding_locator)<span class="question-mark">?</span>.ok_or_else(|| {
+            <span class="kw">let </span>name = context
+                .interner()
+                .resolve_expect(binding_locator.name().sym())
+                .to_string();
+            JsNativeError::reference().with_message(<span class="macro">format!</span>(<span class="string">&quot;{name} is not defined&quot;</span>))
+        })<span class="question-mark">?</span>;
+
+        context.vm.frame_mut().binding_stack.push(binding_locator);
         context.vm.push(value);
         <span class="prelude-val">Ok</span>(CompletionType::Normal)
     }
@@ -217,38 +226,25 @@
 
     <span class="kw">fn </span>execute(context: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; JsResult&lt;CompletionType&gt; {
         <span class="kw">let </span>index = context.vm.read::&lt;u32&gt;();
-        <span class="kw">let </span>binding_locator = context.vm.frame().code_block.bindings[index <span class="kw">as </span>usize];
+        <span class="kw">let </span><span class="kw-2">mut </span>binding_locator = context.vm.frame().code_block.bindings[index <span class="kw">as </span>usize];
         binding_locator.throw_mutate_immutable(context)<span class="question-mark">?</span>;
-        <span class="kw">let </span>value = <span class="kw">if </span>binding_locator.is_global() {
-            <span class="kw">if let </span><span class="prelude-val">Some</span>(value) = context.get_value_if_global_poisoned(binding_locator.name())<span class="question-mark">? </span>{
-                value
-            } <span class="kw">else </span>{
-                <span class="kw">let </span>key: JsString = context
-                    .interner()
-                    .resolve_expect(binding_locator.name().sym())
-                    .into_common(<span class="bool-val">false</span>);
-                <span class="kw">match </span>context.global_object().get_property(<span class="kw-2">&amp;</span>key.into()) {
-                    <span class="prelude-val">Some</span>(desc) =&gt; <span class="kw">match </span>desc.kind() {
-                        DescriptorKind::Data {
-                            value: <span class="prelude-val">Some</span>(value), ..
-                        } =&gt; value.clone(),
-                        DescriptorKind::Accessor { get: <span class="prelude-val">Some</span>(get), .. } <span class="kw">if </span>!get.is_undefined() =&gt; {
-                            <span class="kw">let </span>get = get.clone();
-                            get.call(<span class="kw-2">&amp;</span>context.global_object().into(), <span class="kw-2">&amp;</span>[], context)<span class="question-mark">?
-                        </span>}
-                        <span class="kw">_ </span>=&gt; JsValue::undefined(),
-                    },
-                    <span class="kw">_ </span>=&gt; JsValue::undefined(),
-                }
-            }
-        } <span class="kw">else if let </span><span class="prelude-val">Some</span>(value) = context.get_value_optional(
-            binding_locator.environment_index(),
-            binding_locator.binding_index(),
-            binding_locator.name(),
-        )<span class="question-mark">? </span>{
+
+        <span class="kw">let </span>is_global = binding_locator.is_global();
+
+        context.find_runtime_binding(<span class="kw-2">&amp;mut </span>binding_locator)<span class="question-mark">?</span>;
+
+        <span class="kw">let </span>value = <span class="kw">if let </span><span class="prelude-val">Some</span>(value) = context.get_binding(binding_locator)<span class="question-mark">? </span>{
             value
-        } <span class="kw">else </span>{
+        } <span class="kw">else if </span>is_global {
             JsValue::undefined()
+        } <span class="kw">else </span>{
+            <span class="kw">let </span>name = context
+                .interner()
+                .resolve_expect(binding_locator.name().sym())
+                .to_string();
+            <span class="kw">return </span><span class="prelude-val">Err</span>(JsNativeError::reference()
+                .with_message(<span class="macro">format!</span>(<span class="string">&quot;{name} is not defined&quot;</span>))
+                .into());
         };
 
         context.vm.push(value);

@@ -307,7 +307,7 @@
                 );
                 <span class="kw">match </span>first {
                     <span class="prelude-val">Some</span>(<span class="string">b&#39;?&#39;</span>) =&gt; {
-                        <span class="kw">let _ </span>= cursor.next_byte()<span class="question-mark">?</span>.expect(<span class="string">&quot;? vanished&quot;</span>);
+                        cursor.next_byte()<span class="question-mark">?</span>.expect(<span class="string">&quot;? vanished&quot;</span>);
                         <span class="macro">op!</span>(
                             cursor,
                             start_pos,
@@ -316,7 +316,7 @@
                         )
                     }
                     <span class="prelude-val">Some</span>(<span class="string">b&#39;.&#39;</span>) <span class="kw">if </span>!<span class="macro">matches!</span>(second, <span class="prelude-val">Some</span>(second) <span class="kw">if </span>second.is_ascii_digit()) =&gt; {
-                        <span class="kw">let _ </span>= cursor.next_byte()<span class="question-mark">?</span>.expect(<span class="string">&quot;. vanished&quot;</span>);
+                        cursor.next_byte()<span class="question-mark">?</span>.expect(<span class="string">&quot;. vanished&quot;</span>);
                         <span class="prelude-val">Ok</span>(Token::new(
                             TokenKind::Punctuator(Punctuator::Optional),
                             Span::new(start_pos, cursor.pos()),
