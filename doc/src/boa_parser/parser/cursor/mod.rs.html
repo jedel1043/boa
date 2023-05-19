@@ -297,16 +297,6 @@
 <a href="#296" id="296">296</a>
 <a href="#297" id="297">297</a>
 <a href="#298" id="298">298</a>
-<a href="#299" id="299">299</a>
-<a href="#300" id="300">300</a>
-<a href="#301" id="301">301</a>
-<a href="#302" id="302">302</a>
-<a href="#303" id="303">303</a>
-<a href="#304" id="304">304</a>
-<a href="#305" id="305">305</a>
-<a href="#306" id="306">306</a>
-<a href="#307" id="307">307</a>
-<a href="#308" id="308">308</a>
 </pre><pre class="rust"><code><span class="doccomment">//! Cursor implementation for the parser.
 </span><span class="kw">mod </span>buffered_lexer;
 
@@ -334,17 +324,18 @@
 </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">struct </span>Cursor&lt;R&gt; {
     buffered_lexer: BufferedLexer&lt;R&gt;,
 
-    <span class="doccomment">/// Tracks the number of nested private environments that the cursor is in.
-    </span>private_environment_nested_index: usize,
-
-    <span class="doccomment">/// Tracks the number of private environments on the root level of the code that is parsed.
-    </span>private_environment_root_index: usize,
-
     <span class="doccomment">/// Tracks if the cursor is in a arrow function declaration.
     </span>arrow: bool,
 
     <span class="doccomment">/// Indicate if the cursor is used in `JSON.parse`.
     </span>json_parse: bool,
+
+    <span class="doccomment">/// A unique identifier for each parser instance.
+    /// This is used to generate unique identifiers tagged template literals.
+    </span>identifier: u32,
+
+    <span class="doccomment">/// Tracks the number of tagged templates that are currently being parsed.
+    </span>tagged_templates_count: u32,
 }
 
 <span class="kw">impl</span>&lt;R&gt; Cursor&lt;R&gt;
@@ -355,10 +346,10 @@
     </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>new(reader: R) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             buffered_lexer: Lexer::new(reader).into(),
-            private_environment_nested_index: <span class="number">0</span>,
-            private_environment_root_index: <span class="number">0</span>,
             arrow: <span class="bool-val">false</span>,
             json_parse: <span class="bool-val">false</span>,
+            identifier: <span class="number">0</span>,
+            tagged_templates_count: <span class="number">0</span>,
         }
     }
 
@@ -450,33 +441,22 @@
         <span class="self">self</span>.json_parse = json_parse;
     }
 
-    <span class="doccomment">/// Push a new private environment.
+    <span class="doccomment">/// Set the identifier of the cursor.
     </span><span class="attr">#[inline]
-    </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>push_private_environment(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="kw">if </span>!<span class="self">self</span>.in_class() {
-            <span class="self">self</span>.private_environment_root_index += <span class="number">1</span>;
-        }
-
-        <span class="self">self</span>.private_environment_nested_index += <span class="number">1</span>;
+    </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>set_identifier(<span class="kw-2">&amp;mut </span><span class="self">self</span>, identifier: u32) {
+        <span class="self">self</span>.identifier = identifier;
     }
 
-    <span class="doccomment">/// Pop a private environment.
+    <span class="doccomment">/// Get the identifier for a tagged template.
     </span><span class="attr">#[inline]
-    </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>pop_private_environment(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="self">self</span>.private_environment_nested_index -= <span class="number">1</span>;
-    }
+    </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>tagged_template_identifier(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; u64 {
+        <span class="self">self</span>.tagged_templates_count += <span class="number">1</span>;
 
-    <span class="doccomment">/// Returns the current private environment root index.
-    </span><span class="attr">#[inline]
-    </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">const fn </span>private_environment_root_index(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
-        <span class="self">self</span>.private_environment_root_index
-    }
+        <span class="kw">let </span>identifier = u64::from(<span class="self">self</span>.identifier);
+        <span class="kw">let </span>count = u64::from(<span class="self">self</span>.tagged_templates_count);
 
-    <span class="doccomment">/// Returns if the cursor is in a class.
-    </span><span class="attr">#[inline]
-    </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">const fn </span>in_class(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
-        <span class="self">self</span>.private_environment_nested_index != <span class="number">0
-    </span>}
+        (count &lt;&lt; <span class="number">32</span>) | identifier
+    }
 
     <span class="doccomment">/// Returns an error if the next token is not of kind `kind`.
     </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>expect&lt;K&gt;(
