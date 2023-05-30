@@ -227,6 +227,18 @@
 <a href="#226" id="226">226</a>
 <a href="#227" id="227">227</a>
 <a href="#228" id="228">228</a>
+<a href="#229" id="229">229</a>
+<a href="#230" id="230">230</a>
+<a href="#231" id="231">231</a>
+<a href="#232" id="232">232</a>
+<a href="#233" id="233">233</a>
+<a href="#234" id="234">234</a>
+<a href="#235" id="235">235</a>
+<a href="#236" id="236">236</a>
+<a href="#237" id="237">237</a>
+<a href="#238" id="238">238</a>
+<a href="#239" id="239">239</a>
+<a href="#240" id="240">240</a>
 </pre><pre class="rust"><code><span class="kw">use crate</span>::{
     environments::DeclarativeEnvironment,
     object::{JsObject, ObjectData},
@@ -241,14 +253,14 @@
 /// This struct stores all the data to access mapped function parameters in their environment.
 </span><span class="attr">#[derive(Debug, Clone, Trace, Finalize)]
 </span><span class="kw">pub struct </span>ParameterMap {
-    binding_indices: Vec&lt;<span class="prelude-ty">Option</span>&lt;usize&gt;&gt;,
+    binding_indices: Vec&lt;<span class="prelude-ty">Option</span>&lt;u32&gt;&gt;,
     environment: Gc&lt;DeclarativeEnvironment&gt;,
 }
 
 <span class="kw">impl </span>ParameterMap {
     <span class="doccomment">/// Deletes the binding with the given index from the parameter map.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>delete(<span class="kw-2">&amp;mut </span><span class="self">self</span>, index: usize) {
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(binding) = <span class="self">self</span>.binding_indices.get_mut(index) {
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>delete(<span class="kw-2">&amp;mut </span><span class="self">self</span>, index: u32) {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(binding) = <span class="self">self</span>.binding_indices.get_mut(index <span class="kw">as </span>usize) {
             <span class="kw-2">*</span>binding = <span class="prelude-val">None</span>;
         }
     }
@@ -261,8 +273,12 @@
     ///  - [ECMAScript reference][spec]
     ///
     /// [spec]: https://tc39.es/ecma262/#sec-makearggetter
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>get(<span class="kw-2">&amp;</span><span class="self">self</span>, index: usize) -&gt; <span class="prelude-ty">Option</span>&lt;JsValue&gt; {
-        <span class="kw">let </span>binding_index = <span class="self">self</span>.binding_indices.get(index).copied().flatten()<span class="question-mark">?</span>;
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>get(<span class="kw-2">&amp;</span><span class="self">self</span>, index: u32) -&gt; <span class="prelude-ty">Option</span>&lt;JsValue&gt; {
+        <span class="kw">let </span>binding_index = <span class="self">self
+            </span>.binding_indices
+            .get(index <span class="kw">as </span>usize)
+            .copied()
+            .flatten()<span class="question-mark">?</span>;
         <span class="self">self</span>.environment.get(binding_index)
     }
 
@@ -274,8 +290,8 @@
     ///  - [ECMAScript reference][spec]
     ///
     /// [spec]: https://tc39.es/ecma262/#sec-makeargsetter
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>set(<span class="kw-2">&amp;</span><span class="self">self</span>, index: usize, value: <span class="kw-2">&amp;</span>JsValue) {
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(binding_index) = <span class="self">self</span>.binding_indices.get(index).copied().flatten() {
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>set(<span class="kw-2">&amp;</span><span class="self">self</span>, index: u32, value: <span class="kw-2">&amp;</span>JsValue) {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(binding_index) = <span class="self">self</span>.binding_indices.get(index <span class="kw">as </span>usize).copied().flatten() {
             <span class="self">self</span>.environment.set(binding_index, value.clone());
         }
     }
@@ -380,18 +396,22 @@
         // We use indices to access environment bindings at runtime.
         // To map to function parameters to binding indices, we use the fact, that bindings in a
         // function environment start with all of the arguments in order:
+        //
+        // Note: The first binding (binding 0) is where &quot;arguments&quot; is stored.
+        //
         // `function f (a,b,c)`
         // | binding index | `arguments` property key | identifier |
-        // | 0             | 0                        | a          |
-        // | 1             | 1                        | b          |
-        // | 2             | 2                        | c          |
+        // | 1             | 0                        | a          |
+        // | 2             | 1                        | b          |
+        // | 3             | 2                        | c          |
         //
         // Notice that the binding index does not correspond to the argument index:
         // `function f (a,a,b)` =&gt; binding indices 0 (a), 1 (b), 2 (c)
         // | binding index | `arguments` property key | identifier |
         // | -             | 0                        | -          |
-        // | 0             | 1                        | a          |
-        // | 1             | 2                        | b          |
+        // | 1             | 1                        | a          |
+        // | 2             | 2                        | b          |
+        //
         // While the `arguments` object contains all arguments, they must not be all bound.
         // In the case of duplicate parameter names, the last one is bound as the environment binding.
         //
@@ -403,10 +423,14 @@
             <span class="kw">if </span>property_index &gt;= len {
                 <span class="kw">break</span>;
             }
-            <span class="kw">let </span>binding_index = bindings.len();
+
+            <span class="comment">// NOTE(HalidOdat): Offset by +1 to account for the first binding (&quot;argument&quot;).
+            </span><span class="kw">let </span>binding_index = bindings.len() <span class="kw">as </span>u32 + <span class="number">1</span>;
+
             <span class="kw">let </span>entry = bindings
                 .entry(name)
                 .or_insert((binding_index, property_index));
+
             entry.<span class="number">1 </span>= property_index;
             property_index += <span class="number">1</span>;
         }

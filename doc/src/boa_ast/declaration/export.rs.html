@@ -328,6 +328,20 @@
 <a href="#327" id="327">327</a>
 <a href="#328" id="328">328</a>
 <a href="#329" id="329">329</a>
+<a href="#330" id="330">330</a>
+<a href="#331" id="331">331</a>
+<a href="#332" id="332">332</a>
+<a href="#333" id="333">333</a>
+<a href="#334" id="334">334</a>
+<a href="#335" id="335">335</a>
+<a href="#336" id="336">336</a>
+<a href="#337" id="337">337</a>
+<a href="#338" id="338">338</a>
+<a href="#339" id="339">339</a>
+<a href="#340" id="340">340</a>
+<a href="#341" id="341">341</a>
+<a href="#342" id="342">342</a>
+<a href="#343" id="343">343</a>
 </pre><pre class="rust"><code><span class="doccomment">//! Export declaration AST nodes.
 //!
 //! This module contains `export` declaration AST nodes.
@@ -352,7 +366,9 @@
 <span class="kw">use </span>boa_interner::Sym;
 
 <span class="doccomment">/// The kind of re-export in an [`ExportDeclaration`].
-</span><span class="attr">#[derive(Debug, Clone)]
+</span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;serde&quot;</span>, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = <span class="string">&quot;arbitrary&quot;</span>, derive(arbitrary::Arbitrary))]
+#[derive(Clone, Debug, PartialEq, Eq)]
 </span><span class="kw">pub enum </span>ReExportKind {
     <span class="doccomment">/// Namespaced Re-export (`export * as name from &quot;module-name&quot;`).
     </span>Namespaced {
@@ -406,7 +422,8 @@
 ///  - [ECMAScript specification][spec]
 ///
 /// [spec]: https://tc39.es/ecma262/#prod-ExportDeclaration
-</span><span class="attr">#[derive(Debug, Clone)]
+</span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;serde&quot;</span>, derive(serde::Serialize, serde::Deserialize))]
+#[derive(Clone, Debug, PartialEq)]
 </span><span class="kw">pub enum </span>ExportDeclaration {
     <span class="doccomment">/// Re-export.
     </span>ReExport {
@@ -495,20 +512,24 @@
 ///  - [ECMAScript specification][spec]
 ///
 /// [spec]: https://tc39.es/ecma262/#prod-ExportSpecifier
-</span><span class="attr">#[derive(Debug, Clone, Copy)]
+</span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;serde&quot;</span>, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = <span class="string">&quot;arbitrary&quot;</span>, derive(arbitrary::Arbitrary))]
+#[derive(Clone, Debug, Copy, PartialEq, Eq)]
 </span><span class="kw">pub struct </span>ExportSpecifier {
     alias: Sym,
     private_name: Sym,
+    string_literal: bool,
 }
 
 <span class="kw">impl </span>ExportSpecifier {
     <span class="doccomment">/// Creates a new [`ExportSpecifier`].
     </span><span class="attr">#[inline]
     #[must_use]
-    </span><span class="kw">pub const fn </span>new(alias: Sym, private_name: Sym) -&gt; <span class="self">Self </span>{
+    </span><span class="kw">pub const fn </span>new(alias: Sym, private_name: Sym, string_literal: bool) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             alias,
             private_name,
+            string_literal,
         }
     }
 
@@ -524,6 +545,13 @@
     #[must_use]
     </span><span class="kw">pub const fn </span>private_name(<span class="self">self</span>) -&gt; Sym {
         <span class="self">self</span>.private_name
+    }
+
+    <span class="doccomment">/// Returns `true` if the private name of the specifier was a `StringLiteral`.
+    </span><span class="attr">#[inline]
+    #[must_use]
+    </span><span class="kw">pub const fn </span>string_literal(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+        <span class="self">self</span>.string_literal
     }
 }
 

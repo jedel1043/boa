@@ -344,6 +344,18 @@
 <a href="#343" id="343">343</a>
 <a href="#344" id="344">344</a>
 <a href="#345" id="345">345</a>
+<a href="#346" id="346">346</a>
+<a href="#347" id="347">347</a>
+<a href="#348" id="348">348</a>
+<a href="#349" id="349">349</a>
+<a href="#350" id="350">350</a>
+<a href="#351" id="351">351</a>
+<a href="#352" id="352">352</a>
+<a href="#353" id="353">353</a>
+<a href="#354" id="354">354</a>
+<a href="#355" id="355">355</a>
+<a href="#356" id="356">356</a>
+<a href="#357" id="357">357</a>
 </pre><pre class="rust"><code><span class="kw">mod </span>assign;
 <span class="kw">mod </span>binary;
 <span class="kw">mod </span>object_literal;
@@ -470,22 +482,22 @@
             }
             Expression::Spread(spread) =&gt; <span class="self">self</span>.compile_expr(spread.target(), <span class="bool-val">true</span>),
             Expression::Function(function) =&gt; {
-                <span class="self">self</span>.function(function.into(), NodeKind::Expression, use_expr);
+                <span class="self">self</span>.function_with_binding(function.into(), NodeKind::Expression, use_expr);
             }
             Expression::ArrowFunction(function) =&gt; {
-                <span class="self">self</span>.function(function.into(), NodeKind::Expression, use_expr);
+                <span class="self">self</span>.function_with_binding(function.into(), NodeKind::Expression, use_expr);
             }
             Expression::AsyncArrowFunction(function) =&gt; {
-                <span class="self">self</span>.function(function.into(), NodeKind::Expression, use_expr);
+                <span class="self">self</span>.function_with_binding(function.into(), NodeKind::Expression, use_expr);
             }
             Expression::Generator(function) =&gt; {
-                <span class="self">self</span>.function(function.into(), NodeKind::Expression, use_expr);
+                <span class="self">self</span>.function_with_binding(function.into(), NodeKind::Expression, use_expr);
             }
             Expression::AsyncFunction(function) =&gt; {
-                <span class="self">self</span>.function(function.into(), NodeKind::Expression, use_expr);
+                <span class="self">self</span>.function_with_binding(function.into(), NodeKind::Expression, use_expr);
             }
             Expression::AsyncGenerator(function) =&gt; {
-                <span class="self">self</span>.function(function.into(), NodeKind::Expression, use_expr);
+                <span class="self">self</span>.function_with_binding(function.into(), NodeKind::Expression, use_expr);
             }
             Expression::Call(call) =&gt; <span class="self">self</span>.call(Callable::Call(call), use_expr),
             Expression::New(new) =&gt; <span class="self">self</span>.call(Callable::New(new), use_expr),
@@ -666,9 +678,21 @@
                     <span class="self">self</span>.emit_opcode(Opcode::Pop);
                 }
             }
+            Expression::ImportCall(import) =&gt; {
+                <span class="self">self</span>.compile_expr(import.argument(), <span class="bool-val">true</span>);
+                <span class="self">self</span>.emit_opcode(Opcode::ImportCall);
+                <span class="kw">if </span>!use_expr {
+                    <span class="self">self</span>.emit_opcode(Opcode::Pop);
+                }
+            }
             Expression::NewTarget =&gt; {
                 <span class="kw">if </span>use_expr {
-                    <span class="self">self</span>.emit_opcode(Opcode::PushNewTarget);
+                    <span class="self">self</span>.emit_opcode(Opcode::NewTarget);
+                }
+            }
+            Expression::ImportMeta =&gt; {
+                <span class="kw">if </span>use_expr {
+                    <span class="self">self</span>.emit_opcode(Opcode::ImportMeta);
                 }
             }
             Expression::Optional(opt) =&gt; {
