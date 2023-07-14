@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `boa_engine/src/bytecompiler/statement/break.rs`."><title>break.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-ba5701c5741a7b69.css" id="mainThemeStyle"><div id="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="boa_engine" data-themes="" data-resource-suffix="" data-rustdoc-version="1.70.0 (90c541806 2023-05-31)" data-search-js="search-e077946657036a58.js" data-settings-js="settings-298e1ea74db45b39.js" data-settings-css="settings-7bfb4c59cc6bc502.css" data-theme-light-css="light-0f8c037637f9eb3e.css" data-theme-dark-css="dark-1097f8e92a01e3cf.css" data-theme-ayu-css="ayu-614652228113ac93.css" ></div><script src="../../../../static.files/storage-62ce34ea385b278a.js"></script><script defer src="../../../../static.files/source-script-905937fbbdc8e9ea.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../static.files/main-f61008743c98d196.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../../../static.files/light-0f8c037637f9eb3e.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../../../static.files/dark-1097f8e92a01e3cf.css"><link rel="stylesheet" href="../../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="icon" href="https://raw.githubusercontent.com/boa-dev/boa/main/assets/logo.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../../boa_engine/index.html"><img src="https://raw.githubusercontent.com/boa-dev/boa/main/assets/logo.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `boa_engine/src/bytecompiler/statement/break.rs`."><title>break.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-f3501f0f5ae15dfb.css" id="mainThemeStyle"><div id="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="boa_engine" data-themes="" data-resource-suffix="" data-rustdoc-version="1.71.0 (8ede3aae2 2023-07-12)" data-search-js="search-4926e5fc22a5646a.js" data-settings-js="settings-de11bff964e9d4e5.js" data-settings-css="settings-8c76f75bfb6bd192.css" data-theme-light-css="light-0f8c037637f9eb3e.css" data-theme-dark-css="dark-1097f8e92a01e3cf.css" data-theme-ayu-css="ayu-614652228113ac93.css" ></div><script src="../../../../static.files/storage-62ce34ea385b278a.js"></script><script defer src="../../../../static.files/source-script-11255107d0a65077.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../static.files/main-f0540c1d82cde29b.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../../../static.files/light-0f8c037637f9eb3e.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../../../static.files/dark-1097f8e92a01e3cf.css"><link rel="stylesheet" href="../../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="icon" href="https://raw.githubusercontent.com/boa-dev/boa/main/assets/logo.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../../boa_engine/index.html"><img src="https://raw.githubusercontent.com/boa-dev/boa/main/assets/logo.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -71,16 +71,8 @@
 <a href="#71" id="71">71</a>
 <a href="#72" id="72">72</a>
 <a href="#73" id="73">73</a>
-<a href="#74" id="74">74</a>
-<a href="#75" id="75">75</a>
-<a href="#76" id="76">76</a>
-<a href="#77" id="77">77</a>
-<a href="#78" id="78">78</a>
-<a href="#79" id="79">79</a>
-<a href="#80" id="80">80</a>
-<a href="#81" id="81">81</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
-    bytecompiler::{ByteCompiler, Label},
+    bytecompiler::{ByteCompiler, JumpControlInfo},
     vm::Opcode,
 };
 <span class="kw">use </span>boa_ast::statement::Break;
@@ -88,27 +80,19 @@
 
 <span class="kw">impl </span>ByteCompiler&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt; {
     <span class="doccomment">/// Compile a [`Break`] `boa_ast` node
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>compile_break(<span class="kw-2">&amp;mut </span><span class="self">self</span>, node: Break) {
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>compile_break(<span class="kw-2">&amp;mut </span><span class="self">self</span>, node: Break, _use_expr: bool) {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(info) = <span class="self">self</span>.jump_info.last().filter(|info| info.is_try_block()) {
-            <span class="kw">let </span>in_finally = info.in_finally();
-            <span class="kw">let </span>in_catch_no_finally = info.in_catch() &amp;&amp; !info.has_finally();
             <span class="kw">let </span>has_finally_or_is_finally = info.has_finally() || info.in_finally();
-
-            <span class="kw">if </span>in_finally {
-                <span class="self">self</span>.emit_opcode(Opcode::PopIfThrown);
-            }
-            <span class="kw">if </span>in_finally || in_catch_no_finally {
-                <span class="self">self</span>.emit_opcode(Opcode::CatchEnd2);
-            }
 
             <span class="kw">let </span>(break_label, target_jump_label) =
                 <span class="self">self</span>.emit_opcode_with_two_operands(Opcode::Break);
 
             <span class="kw">if let </span><span class="prelude-val">Some</span>(node_label) = node.label() {
-                <span class="self">self</span>.search_jump_info_label(target_jump_label, node_label);
+                <span class="kw">let </span>info = <span class="self">self</span>.jump_info_label(node_label);
+                info.push_break_label(target_jump_label);
 
                 <span class="kw">if </span>!has_finally_or_is_finally {
-                    <span class="self">self</span>.search_jump_info_label(break_label, node_label);
+                    info.push_break_label(break_label);
                     <span class="kw">return</span>;
                 }
             } <span class="kw">else </span>{
@@ -130,34 +114,34 @@
 
         <span class="comment">// Emit the break opcode -&gt; (Label, Label)
         </span><span class="kw">let </span>(break_label, target_label) = <span class="self">self</span>.emit_opcode_with_two_operands(Opcode::Break);
-        <span class="kw">if </span>node.label().is_some() {
-            <span class="self">self</span>.search_jump_info_label(
-                break_label,
-                node.label().expect(<span class="string">&quot;must exist in this block&quot;</span>),
-            );
-            <span class="self">self</span>.search_jump_info_label(target_label, node.label().expect(<span class="string">&quot;must exist&quot;</span>));
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(label) = node.label() {
+            <span class="kw">let </span>info = <span class="self">self</span>.jump_info_label(label);
+            info.push_break_label(break_label);
+            info.push_break_label(target_label);
             <span class="kw">return</span>;
-        };
+        }
 
-        <span class="kw">let </span>info = <span class="self">self
-            </span>.jump_info
-            .last_mut()
-            .expect(<span class="string">&quot;unlabeled break must be inside loop or switch&quot;</span>);
-
+        <span class="kw">let </span>info = <span class="self">self</span>.jump_info_non_labelled();
         info.push_break_label(break_label);
         info.push_break_label(target_label);
     }
 
-    <span class="kw">fn </span>search_jump_info_label(<span class="kw-2">&amp;mut </span><span class="self">self</span>, address: Label, node_label: Sym) {
-        <span class="kw">let </span><span class="kw-2">mut </span>found = <span class="bool-val">false</span>;
+    <span class="kw">fn </span>jump_info_non_labelled(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>JumpControlInfo {
         <span class="kw">for </span>info <span class="kw">in </span><span class="self">self</span>.jump_info.iter_mut().rev() {
-            <span class="kw">if </span>info.label() == <span class="prelude-val">Some</span>(node_label) {
-                info.push_break_label(address);
-                found = <span class="bool-val">true</span>;
-                <span class="kw">break</span>;
+            <span class="kw">if </span>!info.is_labelled() {
+                <span class="kw">return </span>info;
             }
         }
-        <span class="macro">assert!</span>(found, <span class="string">&quot;Cannot use the undeclared label&quot;</span>);
+        <span class="macro">panic!</span>(<span class="string">&quot;Jump info without label must exist&quot;</span>);
+    }
+
+    <span class="kw">fn </span>jump_info_label(<span class="kw-2">&amp;mut </span><span class="self">self</span>, label: Sym) -&gt; <span class="kw-2">&amp;mut </span>JumpControlInfo {
+        <span class="kw">for </span>info <span class="kw">in </span><span class="self">self</span>.jump_info.iter_mut().rev() {
+            <span class="kw">if </span>info.label() == <span class="prelude-val">Some</span>(label) {
+                <span class="kw">return </span>info;
+            }
+        }
+        <span class="macro">panic!</span>(<span class="string">&quot;Jump info with label must exist&quot;</span>);
     }
 }
 </code></pre></div></section></main></body></html>

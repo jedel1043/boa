@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `boa_engine/src/vm/call_frame/mod.rs`."><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-ba5701c5741a7b69.css" id="mainThemeStyle"><div id="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="boa_engine" data-themes="" data-resource-suffix="" data-rustdoc-version="1.70.0 (90c541806 2023-05-31)" data-search-js="search-e077946657036a58.js" data-settings-js="settings-298e1ea74db45b39.js" data-settings-css="settings-7bfb4c59cc6bc502.css" data-theme-light-css="light-0f8c037637f9eb3e.css" data-theme-dark-css="dark-1097f8e92a01e3cf.css" data-theme-ayu-css="ayu-614652228113ac93.css" ></div><script src="../../../../static.files/storage-62ce34ea385b278a.js"></script><script defer src="../../../../static.files/source-script-905937fbbdc8e9ea.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../static.files/main-f61008743c98d196.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../../../static.files/light-0f8c037637f9eb3e.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../../../static.files/dark-1097f8e92a01e3cf.css"><link rel="stylesheet" href="../../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="icon" href="https://raw.githubusercontent.com/boa-dev/boa/main/assets/logo.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../../boa_engine/index.html"><img src="https://raw.githubusercontent.com/boa-dev/boa/main/assets/logo.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `boa_engine/src/vm/call_frame/mod.rs`."><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-f3501f0f5ae15dfb.css" id="mainThemeStyle"><div id="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="boa_engine" data-themes="" data-resource-suffix="" data-rustdoc-version="1.71.0 (8ede3aae2 2023-07-12)" data-search-js="search-4926e5fc22a5646a.js" data-settings-js="settings-de11bff964e9d4e5.js" data-settings-css="settings-8c76f75bfb6bd192.css" data-theme-light-css="light-0f8c037637f9eb3e.css" data-theme-dark-css="dark-1097f8e92a01e3cf.css" data-theme-ayu-css="ayu-614652228113ac93.css" ></div><script src="../../../../static.files/storage-62ce34ea385b278a.js"></script><script defer src="../../../../static.files/source-script-11255107d0a65077.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../static.files/main-f0540c1d82cde29b.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../../../static.files/light-0f8c037637f9eb3e.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../../../static.files/dark-1097f8e92a01e3cf.css"><link rel="stylesheet" href="../../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="icon" href="https://raw.githubusercontent.com/boa-dev/boa/main/assets/logo.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../../boa_engine/index.html"><img src="https://raw.githubusercontent.com/boa-dev/boa/main/assets/logo.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -116,6 +116,15 @@
 <a href="#116" id="116">116</a>
 <a href="#117" id="117">117</a>
 <a href="#118" id="118">118</a>
+<a href="#119" id="119">119</a>
+<a href="#120" id="120">120</a>
+<a href="#121" id="121">121</a>
+<a href="#122" id="122">122</a>
+<a href="#123" id="123">123</a>
+<a href="#124" id="124">124</a>
+<a href="#125" id="125">125</a>
+<a href="#126" id="126">126</a>
+<a href="#127" id="127">127</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! `CallFrame`
 //!
 //! This module will provides everything needed to implement the `CallFrame`
@@ -124,8 +133,11 @@
 <span class="kw">mod </span>env_stack;
 
 <span class="kw">use crate</span>::{
-    builtins::promise::PromiseCapability, environments::BindingLocator, object::JsObject,
+    builtins::{iterable::IteratorRecord, promise::PromiseCapability},
+    environments::BindingLocator,
+    object::JsObject,
     vm::CodeBlock,
+    JsValue,
 };
 <span class="kw">use </span>boa_gc::{Finalize, Gc, Trace};
 <span class="kw">use </span>thin_vec::ThinVec;
@@ -143,9 +155,9 @@
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) abrupt_completion: <span class="prelude-ty">Option</span>&lt;AbruptCompletionRecord&gt;,
     <span class="attr">#[unsafe_ignore_trace]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) r#yield: bool,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) pop_on_return: u32,
     <span class="comment">// Tracks the number of environments in environment entry.
     // On abrupt returns this is used to decide how many environments need to be pop&#39;ed.
+    </span><span class="attr">#[unsafe_ignore_trace]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) env_stack: Vec&lt;EnvStackEntry&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) argument_count: u32,
     <span class="attr">#[unsafe_ignore_trace]
@@ -157,10 +169,15 @@
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) async_generator: <span class="prelude-ty">Option</span>&lt;JsObject&gt;,
 
     <span class="comment">// Iterators and their `[[Done]]` flags that must be closed when an abrupt completion is thrown.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) iterators: ThinVec&lt;(JsObject, bool)&gt;,
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) iterators: ThinVec&lt;IteratorRecord&gt;,
 
     <span class="comment">// The stack of bindings being updated.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) binding_stack: Vec&lt;BindingLocator&gt;,
+
+    <span class="doccomment">/// The value that is returned from the function.
+    </span><span class="comment">//
+    // TODO(HalidOdat): Remove this and put into the stack, maybe before frame pointer.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) return_value: JsValue,
 }
 
 <span class="doccomment">/// ---- `CallFrame` public API ----
@@ -181,7 +198,6 @@
             code_block,
             pc: <span class="number">0</span>,
             fp: <span class="number">0</span>,
-            pop_on_return: <span class="number">0</span>,
             env_stack: Vec::from([EnvStackEntry::new(<span class="number">0</span>, max_length)]),
             abrupt_completion: <span class="prelude-val">None</span>,
             r#yield: <span class="bool-val">false</span>,
@@ -191,6 +207,7 @@
             async_generator: <span class="prelude-val">None</span>,
             iterators: ThinVec::new(),
             binding_stack: Vec::new(),
+            return_value: JsValue::undefined(),
         }
     }
 
@@ -228,9 +245,10 @@
 }
 
 <span class="doccomment">/// Indicates how a generator function that has been called/resumed should return.
-</span><span class="attr">#[derive(Copy, Clone, Debug, PartialEq)]
+</span><span class="attr">#[derive(Copy, Clone, Debug, PartialEq, Default)]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>GeneratorResumeKind {
-    Normal,
+    <span class="attr">#[default]
+    </span>Normal,
     Throw,
     Return,
 }

@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `boa_engine/src/vm/code_block.rs`."><title>code_block.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-ba5701c5741a7b69.css" id="mainThemeStyle"><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="boa_engine" data-themes="" data-resource-suffix="" data-rustdoc-version="1.70.0 (90c541806 2023-05-31)" data-search-js="search-e077946657036a58.js" data-settings-js="settings-298e1ea74db45b39.js" data-settings-css="settings-7bfb4c59cc6bc502.css" data-theme-light-css="light-0f8c037637f9eb3e.css" data-theme-dark-css="dark-1097f8e92a01e3cf.css" data-theme-ayu-css="ayu-614652228113ac93.css" ></div><script src="../../../static.files/storage-62ce34ea385b278a.js"></script><script defer src="../../../static.files/source-script-905937fbbdc8e9ea.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../static.files/main-f61008743c98d196.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../../static.files/light-0f8c037637f9eb3e.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../../static.files/dark-1097f8e92a01e3cf.css"><link rel="stylesheet" href="../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="icon" href="https://raw.githubusercontent.com/boa-dev/boa/main/assets/logo.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../boa_engine/index.html"><img src="https://raw.githubusercontent.com/boa-dev/boa/main/assets/logo.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `boa_engine/src/vm/code_block.rs`."><title>code_block.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-f3501f0f5ae15dfb.css" id="mainThemeStyle"><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="boa_engine" data-themes="" data-resource-suffix="" data-rustdoc-version="1.71.0 (8ede3aae2 2023-07-12)" data-search-js="search-4926e5fc22a5646a.js" data-settings-js="settings-de11bff964e9d4e5.js" data-settings-css="settings-8c76f75bfb6bd192.css" data-theme-light-css="light-0f8c037637f9eb3e.css" data-theme-dark-css="dark-1097f8e92a01e3cf.css" data-theme-ayu-css="ayu-614652228113ac93.css" ></div><script src="../../../static.files/storage-62ce34ea385b278a.js"></script><script defer src="../../../static.files/source-script-11255107d0a65077.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../static.files/main-f0540c1d82cde29b.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../../static.files/light-0f8c037637f9eb3e.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../../static.files/dark-1097f8e92a01e3cf.css"><link rel="stylesheet" href="../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="icon" href="https://raw.githubusercontent.com/boa-dev/boa/main/assets/logo.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../boa_engine/index.html"><img src="https://raw.githubusercontent.com/boa-dev/boa/main/assets/logo.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1516,14 +1516,6 @@
 <a href="#1516" id="1516">1516</a>
 <a href="#1517" id="1517">1517</a>
 <a href="#1518" id="1518">1518</a>
-<a href="#1519" id="1519">1519</a>
-<a href="#1520" id="1520">1520</a>
-<a href="#1521" id="1521">1521</a>
-<a href="#1522" id="1522">1522</a>
-<a href="#1523" id="1523">1523</a>
-<a href="#1524" id="1524">1524</a>
-<a href="#1525" id="1525">1525</a>
-<a href="#1526" id="1526">1526</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! `CodeBlock`
 //!
 //! This module is for the `CodeBlock` which implements a function representation in the VM
@@ -1545,11 +1537,10 @@
     Context, JsError, JsResult, JsString, JsValue,
 };
 <span class="kw">use </span>bitflags::bitflags;
-<span class="kw">use </span>boa_ast::function::{FormalParameterList, PrivateName};
-<span class="kw">use </span>boa_gc::{empty_trace, Finalize, Gc, GcRefCell, Trace};
-<span class="kw">use </span>boa_interner::Sym;
+<span class="kw">use </span>boa_ast::function::FormalParameterList;
+<span class="kw">use </span>boa_gc::{empty_trace, Finalize, Gc, Trace};
 <span class="kw">use </span>boa_profiler::Profiler;
-<span class="kw">use </span>std::{cell::Cell, collections::VecDeque, mem::size_of};
+<span class="kw">use </span>std::{cell::Cell, collections::VecDeque, mem::size_of, rc::Rc};
 <span class="kw">use </span>thin_vec::ThinVec;
 
 <span class="attr">#[cfg(any(feature = <span class="string">&quot;trace&quot;</span>, feature = <span class="string">&quot;flowgraph&quot;</span>))]
@@ -1600,6 +1591,9 @@
         /// The `&quot;arguments&quot;` binding is the first binding.
         </span><span class="kw">const </span>NEEDS_ARGUMENTS_OBJECT = <span class="number">0b0001_0000</span>;
 
+        <span class="doccomment">/// The `[[ClassFieldInitializerName]]` internal slot.
+        </span><span class="kw">const </span>IN_CLASS_FIELD_INITIALIZER = <span class="number">0b0010_0000</span>;
+
         <span class="doccomment">/// Trace instruction execution to `stdout`.
         </span><span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
         </span><span class="kw">const </span>TRACEABLE = <span class="number">0b1000_0000</span>;
@@ -1620,7 +1614,7 @@
 </span><span class="kw">pub struct </span>CodeBlock {
     <span class="doccomment">/// Name of this function
     </span><span class="attr">#[unsafe_ignore_trace]
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) name: Sym,
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) name: JsString,
 
     <span class="attr">#[unsafe_ignore_trace]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) flags: Cell&lt;CodeBlockFlags&gt;,
@@ -1641,12 +1635,8 @@
     <span class="doccomment">/// Literals
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) literals: Box&lt;[JsValue]&gt;,
 
-    <span class="doccomment">/// Property field names.
+    <span class="doccomment">/// Property field names and private names `[[description]]`s.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) names: Box&lt;[JsString]&gt;,
-
-    <span class="doccomment">/// Private names.
-    </span><span class="attr">#[unsafe_ignore_trace]
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) private_names: Box&lt;[PrivateName]&gt;,
 
     <span class="doccomment">/// Locators for all bindings in the codeblock.
     </span><span class="attr">#[unsafe_ignore_trace]
@@ -1656,25 +1646,25 @@
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) functions: Box&lt;[Gc&lt;<span class="self">Self</span>&gt;]&gt;,
 
     <span class="doccomment">/// Compile time environments in this function.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) compile_environments: Box&lt;[Gc&lt;GcRefCell&lt;CompileTimeEnvironment&gt;&gt;]&gt;,
-
-    <span class="doccomment">/// The `[[ClassFieldInitializerName]]` internal slot.
+    ///
+    </span><span class="comment">// Safety: Nothing in CompileTimeEnvironment needs tracing, so this is safe.
+    //
+    // TODO(#3034): Maybe changing this to Gc after garbage collection would be better than Rc.
     </span><span class="attr">#[unsafe_ignore_trace]
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) class_field_initializer_name: <span class="prelude-ty">Option</span>&lt;Sym&gt;,
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) compile_environments: Box&lt;[Rc&lt;CompileTimeEnvironment&gt;]&gt;,
 }
 
 <span class="doccomment">/// ---- `CodeBlock` public API ----
 </span><span class="kw">impl </span>CodeBlock {
     <span class="doccomment">/// Creates a new `CodeBlock`.
     </span><span class="attr">#[must_use]
-    </span><span class="kw">pub fn </span>new(name: Sym, length: u32, strict: bool) -&gt; <span class="self">Self </span>{
+    </span><span class="kw">pub fn </span>new(name: JsString, length: u32, strict: bool) -&gt; <span class="self">Self </span>{
         <span class="kw">let </span><span class="kw-2">mut </span>flags = CodeBlockFlags::empty();
         flags.set(CodeBlockFlags::STRICT, strict);
         <span class="self">Self </span>{
             bytecode: Box::default(),
             literals: Box::default(),
             names: Box::default(),
-            private_names: Box::default(),
             bindings: Box::default(),
             functions: Box::default(),
             name,
@@ -1683,14 +1673,13 @@
             this_mode: ThisMode::Global,
             params: FormalParameterList::default(),
             compile_environments: Box::default(),
-            class_field_initializer_name: <span class="prelude-val">None</span>,
         }
     }
 
     <span class="doccomment">/// Retrieves the name associated with this code block.
     </span><span class="attr">#[must_use]
-    </span><span class="kw">pub const fn </span>name(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Sym {
-        <span class="self">self</span>.name
+    </span><span class="kw">pub const fn </span>name(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>JsString {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.name
     }
 
     <span class="doccomment">/// Check if the function is traced.
@@ -1738,6 +1727,13 @@
         <span class="self">self</span>.flags
             .get()
             .contains(CodeBlockFlags::NEEDS_ARGUMENTS_OBJECT)
+    }
+
+    <span class="doccomment">/// Does this function have the `[[ClassFieldInitializerName]]` internal slot set to non-empty value.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>in_class_field_initializer(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+        <span class="self">self</span>.flags
+            .get()
+            .contains(CodeBlockFlags::IN_CLASS_FIELD_INITIALIZER)
     }
 }
 
@@ -1831,7 +1827,6 @@
             | Opcode::JumpIfFalse
             | Opcode::JumpIfNotUndefined
             | Opcode::JumpIfNullOrUndefined
-            | Opcode::CatchStart
             | Opcode::FinallyStart
             | Opcode::LabelledStart
             | Opcode::Case
@@ -1843,10 +1838,7 @@
             | Opcode::Call
             | Opcode::New
             | Opcode::SuperCall
-            | Opcode::IteratorUnwrapNextOrJump
-            | Opcode::ConcatToString
-            | Opcode::GeneratorAsyncResumeYield
-            | Opcode::GeneratorNextDelegate =&gt; {
+            | Opcode::ConcatToString =&gt; {
                 <span class="kw">let </span>result = <span class="self">self</span>.read::&lt;u32&gt;(<span class="kw-2">*</span>pc).to_string();
                 <span class="kw-2">*</span>pc += size_of::&lt;u32&gt;();
                 result
@@ -1860,9 +1852,10 @@
             | Opcode::Break
             | Opcode::Continue
             | Opcode::LoopStart
+            | Opcode::IteratorLoopStart
             | Opcode::TryStart
-            | Opcode::AsyncGeneratorNext
-            | Opcode::GeneratorAsyncDelegateNext =&gt; {
+            | Opcode::GeneratorDelegateNext
+            | Opcode::GeneratorDelegateResume =&gt; {
                 <span class="kw">let </span>operand1 = <span class="self">self</span>.read::&lt;u32&gt;(<span class="kw-2">*</span>pc);
                 <span class="kw-2">*</span>pc += size_of::&lt;u32&gt;();
                 <span class="kw">let </span>operand2 = <span class="self">self</span>.read::&lt;u32&gt;(<span class="kw-2">*</span>pc);
@@ -1876,15 +1869,6 @@
                 <span class="kw-2">*</span>pc += size_of::&lt;u64&gt;();
                 <span class="macro">format!</span>(<span class="string">&quot;{operand1}, {operand2}&quot;</span>)
             }
-            Opcode::GeneratorAsyncDelegateResume =&gt; {
-                <span class="kw">let </span>operand1 = <span class="self">self</span>.read::&lt;u32&gt;(<span class="kw-2">*</span>pc);
-                <span class="kw-2">*</span>pc += size_of::&lt;u32&gt;();
-                <span class="kw">let </span>operand2 = <span class="self">self</span>.read::&lt;u32&gt;(<span class="kw-2">*</span>pc);
-                <span class="kw-2">*</span>pc += size_of::&lt;u32&gt;();
-                <span class="kw">let </span>operand3 = <span class="self">self</span>.read::&lt;u32&gt;(<span class="kw-2">*</span>pc);
-                <span class="kw-2">*</span>pc += size_of::&lt;u32&gt;();
-                <span class="macro">format!</span>(<span class="string">&quot;{operand1}, {operand2}, {operand3}&quot;</span>)
-            }
             Opcode::GetArrowFunction
             | Opcode::GetAsyncArrowFunction
             | Opcode::GetFunction
@@ -1893,15 +1877,20 @@
                 <span class="kw-2">*</span>pc += size_of::&lt;u32&gt;() + size_of::&lt;u8&gt;();
                 <span class="macro">format!</span>(
                     <span class="string">&quot;{operand:04}: &#39;{}&#39; (length: {})&quot;</span>,
-                    interner.resolve_expect(<span class="self">self</span>.functions[operand <span class="kw">as </span>usize].name),
+                    <span class="self">self</span>.functions[operand <span class="kw">as </span>usize]
+                        .name()
+                        .to_std_string_escaped(),
                     <span class="self">self</span>.functions[operand <span class="kw">as </span>usize].length
                 )
             }
             Opcode::GetGenerator | Opcode::GetGeneratorAsync =&gt; {
                 <span class="kw">let </span>operand = <span class="self">self</span>.read::&lt;u32&gt;(<span class="kw-2">*</span>pc);
+                <span class="kw-2">*</span>pc += size_of::&lt;u32&gt;();
                 <span class="macro">format!</span>(
                     <span class="string">&quot;{operand:04}: &#39;{}&#39; (length: {})&quot;</span>,
-                    interner.resolve_expect(<span class="self">self</span>.functions[operand <span class="kw">as </span>usize].name),
+                    <span class="self">self</span>.functions[operand <span class="kw">as </span>usize]
+                        .name()
+                        .to_std_string_escaped(),
                     <span class="self">self</span>.functions[operand <span class="kw">as </span>usize].length
                 )
             }
@@ -1934,15 +1923,8 @@
             | Opcode::SetPropertySetterByName
             | Opcode::DefineClassStaticSetterByName
             | Opcode::DefineClassSetterByName
-            | Opcode::DeletePropertyByName =&gt; {
-                <span class="kw">let </span>operand = <span class="self">self</span>.read::&lt;u32&gt;(<span class="kw-2">*</span>pc);
-                <span class="kw-2">*</span>pc += size_of::&lt;u32&gt;();
-                <span class="macro">format!</span>(
-                    <span class="string">&quot;{operand:04}: &#39;{}&#39;&quot;</span>,
-                    <span class="self">self</span>.names[operand <span class="kw">as </span>usize].to_std_string_escaped(),
-                )
-            }
-            Opcode::SetPrivateField
+            | Opcode::DeletePropertyByName
+            | Opcode::SetPrivateField
             | Opcode::DefinePrivateField
             | Opcode::SetPrivateMethod
             | Opcode::SetPrivateSetter
@@ -1952,12 +1934,13 @@
             | Opcode::PushClassPrivateGetter
             | Opcode::PushClassPrivateSetter
             | Opcode::PushClassPrivateMethod
-            | Opcode::InPrivate =&gt; {
+            | Opcode::InPrivate
+            | Opcode::ThrowMutateImmutable =&gt; {
                 <span class="kw">let </span>operand = <span class="self">self</span>.read::&lt;u32&gt;(<span class="kw-2">*</span>pc);
                 <span class="kw-2">*</span>pc += size_of::&lt;u32&gt;();
                 <span class="macro">format!</span>(
                     <span class="string">&quot;{operand:04}: &#39;{}&#39;&quot;</span>,
-                    interner.resolve_expect(<span class="self">self</span>.private_names[operand <span class="kw">as </span>usize].description()),
+                    <span class="self">self</span>.names[operand <span class="kw">as </span>usize].to_std_string_escaped(),
                 )
             }
             Opcode::PushPrivateEnvironment =&gt; {
@@ -1965,8 +1948,21 @@
                 <span class="kw-2">*</span>pc += size_of::&lt;u32&gt;() * (count <span class="kw">as </span>usize + <span class="number">1</span>);
                 String::new()
             }
+            Opcode::GeneratorJumpOnResumeKind =&gt; {
+                <span class="kw">let </span>normal = <span class="self">self</span>.read::&lt;u32&gt;(<span class="kw-2">*</span>pc);
+                <span class="kw-2">*</span>pc += size_of::&lt;u32&gt;();
+                <span class="kw">let </span>throw = <span class="self">self</span>.read::&lt;u32&gt;(<span class="kw-2">*</span>pc);
+                <span class="kw-2">*</span>pc += size_of::&lt;u32&gt;();
+                <span class="kw">let </span>r#return = <span class="self">self</span>.read::&lt;u32&gt;(<span class="kw-2">*</span>pc);
+                <span class="kw-2">*</span>pc += size_of::&lt;u32&gt;();
+                <span class="macro">format!</span>(<span class="string">&quot;n: {normal}, t: {throw}, r: {return}&quot;</span>)
+            }
+            Opcode::CreateIteratorResult =&gt; {
+                <span class="kw">let </span>done = <span class="self">self</span>.read::&lt;u8&gt;(<span class="kw-2">*</span>pc) != <span class="number">0</span>;
+                <span class="kw-2">*</span>pc += size_of::&lt;u8&gt;();
+                <span class="macro">format!</span>(<span class="string">&quot;done: {done}&quot;</span>)
+            }
             Opcode::Pop
-            | Opcode::PopIfThrown
             | Opcode::Dup
             | Opcode::Swap
             | Opcode::PushZero
@@ -1982,6 +1978,7 @@
             | Opcode::PushClassPrototype
             | Opcode::SetClassPrototype
             | Opcode::SetHomeObject
+            | Opcode::SetHomeObjectClass
             | Opcode::Add
             | Opcode::Sub
             | Opcode::Div
@@ -2032,8 +2029,6 @@
             | Opcode::ToBoolean
             | Opcode::Throw
             | Opcode::TryEnd
-            | Opcode::CatchEnd
-            | Opcode::CatchEnd2
             | Opcode::FinallyEnd
             | Opcode::This
             | Opcode::Super
@@ -2041,19 +2036,20 @@
             | Opcode::PopEnvironment
             | Opcode::LoopEnd
             | Opcode::LoopContinue
-            | Opcode::LoopUpdateReturnValue
             | Opcode::LabelledEnd
             | Opcode::CreateForInIterator
             | Opcode::GetIterator
             | Opcode::GetAsyncIterator
             | Opcode::GeneratorResumeReturn
             | Opcode::IteratorNext
-            | Opcode::IteratorNextSetDone
-            | Opcode::IteratorUnwrapNext
-            | Opcode::IteratorUnwrapValue
+            | Opcode::IteratorFinishAsyncNext
+            | Opcode::IteratorValue
+            | Opcode::IteratorResult
+            | Opcode::IteratorDone
             | Opcode::IteratorToArray
-            | Opcode::IteratorClosePush
-            | Opcode::IteratorClosePop
+            | Opcode::IteratorPop
+            | Opcode::IteratorReturn
+            | Opcode::IteratorStackEmpty
             | Opcode::RequireObjectCoercible
             | Opcode::ValueNotNullOrUndefined
             | Opcode::RestParameterInit
@@ -2062,10 +2058,10 @@
             | Opcode::PushElisionToArray
             | Opcode::PushIteratorToArray
             | Opcode::PushNewArray
-            | Opcode::PopOnReturnAdd
-            | Opcode::PopOnReturnSub
-            | Opcode::Yield
+            | Opcode::GeneratorYield
+            | Opcode::AsyncGeneratorYield
             | Opcode::GeneratorNext
+            | Opcode::GeneratorSetReturn
             | Opcode::PushClassField
             | Opcode::SuperCallDerived
             | Opcode::Await
@@ -2082,6 +2078,8 @@
             | Opcode::SetNameByLocator
             | Opcode::PopPrivateEnvironment
             | Opcode::ImportCall
+            | Opcode::GetReturnValue
+            | Opcode::SetReturnValue
             | Opcode::Nop =&gt; String::new(),
             Opcode::Reserved1
             | Opcode::Reserved2
@@ -2146,8 +2144,8 @@
 <span class="attr">#[cfg(any(feature = <span class="string">&quot;trace&quot;</span>, feature = <span class="string">&quot;flowgraph&quot;</span>))]
 </span><span class="kw">impl </span>ToInternedString <span class="kw">for </span>CodeBlock {
     <span class="kw">fn </span>to_interned_string(<span class="kw-2">&amp;</span><span class="self">self</span>, interner: <span class="kw-2">&amp;</span>Interner) -&gt; String {
-        <span class="kw">let </span>name = interner.resolve_expect(<span class="self">self</span>.name);
-        <span class="kw">let </span><span class="kw-2">mut </span>f = <span class="kw">if </span><span class="self">self</span>.name == Sym::MAIN {
+        <span class="kw">let </span>name = <span class="self">self</span>.name();
+        <span class="kw">let </span><span class="kw-2">mut </span>f = <span class="kw">if </span>name == <span class="string">&quot;&lt;main&gt;&quot; </span>{
             String::new()
         } <span class="kw">else </span>{
             <span class="string">&quot;\n&quot;</span>.to_owned()
@@ -2155,7 +2153,7 @@
 
         f.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
             <span class="string">&quot;{:-^70}\nLocation  Count   Opcode                     Operands\n\n&quot;</span>,
-            <span class="macro">format!</span>(<span class="string">&quot;Compiled Output: &#39;{name}&#39;&quot;</span>),
+            <span class="macro">format!</span>(<span class="string">&quot;Compiled Output: &#39;{}&#39;&quot;</span>, name.to_std_string_escaped()),
         ));
 
         <span class="kw">let </span><span class="kw-2">mut </span>pc = <span class="number">0</span>;
@@ -2204,7 +2202,7 @@
             <span class="kw">for </span>(i, code) <span class="kw">in </span><span class="self">self</span>.functions.iter().enumerate() {
                 f.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
                     <span class="string">&quot;    {i:04}: name: &#39;{}&#39; (length: {})\n&quot;</span>,
-                    interner.resolve_expect(code.name),
+                    code.name().to_std_string_escaped(),
                     code.length
                 ));
             }
@@ -2231,12 +2229,7 @@
 ) -&gt; JsObject {
     <span class="kw">let </span>_timer = Profiler::global().start_event(<span class="string">&quot;create_function_object&quot;</span>, <span class="string">&quot;vm&quot;</span>);
 
-    <span class="kw">let </span>name: JsValue = context
-        .interner()
-        .resolve_expect(code.name)
-        .into_common::&lt;JsString&gt;(<span class="bool-val">false</span>)
-        .into();
-
+    <span class="kw">let </span>name: JsValue = code.name().clone().into();
     <span class="kw">let </span>length: JsValue = code.length.into();
 
     <span class="kw">let </span>script_or_module = context.vm.active_runnable.clone();
@@ -2316,12 +2309,7 @@
 ) -&gt; JsObject {
     <span class="kw">let </span>_timer = Profiler::global().start_event(<span class="string">&quot;create_function_object_fast&quot;</span>, <span class="string">&quot;vm&quot;</span>);
 
-    <span class="kw">let </span>name: JsValue = context
-        .interner()
-        .resolve_expect(code.name)
-        .into_common::&lt;JsString&gt;(<span class="bool-val">false</span>)
-        .into();
-
+    <span class="kw">let </span>name: JsValue = code.name().clone().into();
     <span class="kw">let </span>length: JsValue = code.length.into();
 
     <span class="kw">let </span>script_or_module = context.vm.active_runnable.clone();
@@ -2406,12 +2394,7 @@
     };
 
     <span class="kw">let </span>name_property = PropertyDescriptor::builder()
-        .value(
-            context
-                .interner()
-                .resolve_expect(code.name)
-                .into_common::&lt;JsString&gt;(<span class="bool-val">false</span>),
-        )
+        .value(code.name().clone())
         .writable(<span class="bool-val">false</span>)
         .enumerable(<span class="bool-val">false</span>)
         .configurable(<span class="bool-val">true</span>)
@@ -2931,10 +2914,11 @@
                 );
 
                 <span class="kw">if </span>code.has_parameters_env_bindings() {
+                    last_env -= <span class="number">1</span>;
                     context
                         .vm
                         .environments
-                        .push_lexical(code.compile_environments[<span class="number">0</span>].clone());
+                        .push_lexical(code.compile_environments[last_env].clone());
                 }
 
                 <span class="comment">// Taken from: `FunctionDeclarationInstantiation` abstract function.

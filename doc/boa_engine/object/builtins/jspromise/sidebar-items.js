@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["mark"],"struct":["JsPromise"]};
+window.SIDEBAR_ITEMS = {"struct":["Inner","JsFuture","JsPromise"]};

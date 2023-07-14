@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `boa_engine/src/environments/runtime/mod.rs`."><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-ba5701c5741a7b69.css" id="mainThemeStyle"><div id="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="boa_engine" data-themes="" data-resource-suffix="" data-rustdoc-version="1.70.0 (90c541806 2023-05-31)" data-search-js="search-e077946657036a58.js" data-settings-js="settings-298e1ea74db45b39.js" data-settings-css="settings-7bfb4c59cc6bc502.css" data-theme-light-css="light-0f8c037637f9eb3e.css" data-theme-dark-css="dark-1097f8e92a01e3cf.css" data-theme-ayu-css="ayu-614652228113ac93.css" ></div><script src="../../../../static.files/storage-62ce34ea385b278a.js"></script><script defer src="../../../../static.files/source-script-905937fbbdc8e9ea.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../static.files/main-f61008743c98d196.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../../../static.files/light-0f8c037637f9eb3e.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../../../static.files/dark-1097f8e92a01e3cf.css"><link rel="stylesheet" href="../../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="icon" href="https://raw.githubusercontent.com/boa-dev/boa/main/assets/logo.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../../boa_engine/index.html"><img src="https://raw.githubusercontent.com/boa-dev/boa/main/assets/logo.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `boa_engine/src/environments/runtime/mod.rs`."><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-f3501f0f5ae15dfb.css" id="mainThemeStyle"><div id="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="boa_engine" data-themes="" data-resource-suffix="" data-rustdoc-version="1.71.0 (8ede3aae2 2023-07-12)" data-search-js="search-4926e5fc22a5646a.js" data-settings-js="settings-de11bff964e9d4e5.js" data-settings-css="settings-8c76f75bfb6bd192.css" data-theme-light-css="light-0f8c037637f9eb3e.css" data-theme-dark-css="dark-1097f8e92a01e3cf.css" data-theme-ayu-css="ayu-614652228113ac93.css" ></div><script src="../../../../static.files/storage-62ce34ea385b278a.js"></script><script defer src="../../../../static.files/source-script-11255107d0a65077.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../static.files/main-f0540c1d82cde29b.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../../../static.files/light-0f8c037637f9eb3e.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../../../static.files/dark-1097f8e92a01e3cf.css"><link rel="stylesheet" href="../../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="icon" href="https://raw.githubusercontent.com/boa-dev/boa/main/assets/logo.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../../boa_engine/index.html"><img src="https://raw.githubusercontent.com/boa-dev/boa/main/assets/logo.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -774,66 +774,15 @@
 <a href="#774" id="774">774</a>
 <a href="#775" id="775">775</a>
 <a href="#776" id="776">776</a>
-<a href="#777" id="777">777</a>
-<a href="#778" id="778">778</a>
-<a href="#779" id="779">779</a>
-<a href="#780" id="780">780</a>
-<a href="#781" id="781">781</a>
-<a href="#782" id="782">782</a>
-<a href="#783" id="783">783</a>
-<a href="#784" id="784">784</a>
-<a href="#785" id="785">785</a>
-<a href="#786" id="786">786</a>
-<a href="#787" id="787">787</a>
-<a href="#788" id="788">788</a>
-<a href="#789" id="789">789</a>
-<a href="#790" id="790">790</a>
-<a href="#791" id="791">791</a>
-<a href="#792" id="792">792</a>
-<a href="#793" id="793">793</a>
-<a href="#794" id="794">794</a>
-<a href="#795" id="795">795</a>
-<a href="#796" id="796">796</a>
-<a href="#797" id="797">797</a>
-<a href="#798" id="798">798</a>
-<a href="#799" id="799">799</a>
-<a href="#800" id="800">800</a>
-<a href="#801" id="801">801</a>
-<a href="#802" id="802">802</a>
-<a href="#803" id="803">803</a>
-<a href="#804" id="804">804</a>
-<a href="#805" id="805">805</a>
-<a href="#806" id="806">806</a>
-<a href="#807" id="807">807</a>
-<a href="#808" id="808">808</a>
-<a href="#809" id="809">809</a>
-<a href="#810" id="810">810</a>
-<a href="#811" id="811">811</a>
-<a href="#812" id="812">812</a>
-<a href="#813" id="813">813</a>
-<a href="#814" id="814">814</a>
-<a href="#815" id="815">815</a>
-<a href="#816" id="816">816</a>
-<a href="#817" id="817">817</a>
-<a href="#818" id="818">818</a>
-<a href="#819" id="819">819</a>
-<a href="#820" id="820">820</a>
-<a href="#821" id="821">821</a>
-<a href="#822" id="822">822</a>
-<a href="#823" id="823">823</a>
-<a href="#824" id="824">824</a>
-<a href="#825" id="825">825</a>
-<a href="#826" id="826">826</a>
-<a href="#827" id="827">827</a>
-</pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
+</pre></div><pre class="rust"><code><span class="kw">use </span>std::rc::Rc;
+
+<span class="kw">use crate</span>::{
     environments::CompileTimeEnvironment,
-    error::JsNativeError,
     object::{JsObject, PrivateName},
     Context, JsResult, JsString, JsSymbol, JsValue,
 };
 <span class="kw">use </span>boa_ast::expression::Identifier;
-<span class="kw">use </span>boa_gc::{empty_trace, Finalize, Gc, GcRefCell, Trace};
-<span class="kw">use </span>boa_interner::Sym;
+<span class="kw">use </span>boa_gc::{empty_trace, Finalize, Gc, Trace};
 <span class="kw">use </span>rustc_hash::FxHashSet;
 
 <span class="kw">mod </span>declarative;
@@ -916,7 +865,7 @@
             .rev()
         {
             <span class="kw">if let </span>DeclarativeEnvironmentKind::Function(fun) = <span class="kw-2">&amp;</span>env.kind() {
-                <span class="kw">let </span>compile_bindings_number = env.compile_env().borrow().num_bindings() <span class="kw">as </span>usize;
+                <span class="kw">let </span>compile_bindings_number = env.compile_env().num_bindings() <span class="kw">as </span>usize;
                 <span class="kw">let </span><span class="kw-2">mut </span>bindings = fun.poisonable_environment().bindings().borrow_mut();
 
                 <span class="kw">if </span>compile_bindings_number &gt; bindings.len() {
@@ -942,7 +891,6 @@
             .rev()
         {
             <span class="kw">let </span>compile = env.compile_env();
-            <span class="kw">let </span>compile = compile.borrow();
             <span class="kw">for </span>name <span class="kw">in </span>names {
                 <span class="kw">if </span>compile.has_lex_binding(<span class="kw-2">*</span>name) {
                     <span class="kw">return </span><span class="prelude-val">Some</span>(<span class="kw-2">*</span>name);
@@ -964,7 +912,6 @@
             .filter_map(Environment::as_declarative)
         {
             <span class="kw">let </span>compile = env.compile_env();
-            <span class="kw">let </span>compile = compile.borrow();
             <span class="kw">if </span>compile.is_function() {
                 <span class="kw">return </span>compile.outer().is_none();
             }
@@ -1047,11 +994,8 @@
     ///
     /// Panics if no environment exists on the stack.
     </span><span class="attr">#[track_caller]
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>push_lexical(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        compile_environment: Gc&lt;GcRefCell&lt;CompileTimeEnvironment&gt;&gt;,
-    ) -&gt; u32 {
-        <span class="kw">let </span>num_bindings = compile_environment.borrow().num_bindings();
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>push_lexical(<span class="kw-2">&amp;mut </span><span class="self">self</span>, compile_environment: Rc&lt;CompileTimeEnvironment&gt;) -&gt; u32 {
+        <span class="kw">let </span>num_bindings = compile_environment.num_bindings();
 
         <span class="kw">let </span>(poisoned, with) = {
             <span class="kw">let </span>with = <span class="self">self
@@ -1094,10 +1038,10 @@
     </span><span class="attr">#[track_caller]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>push_function(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        compile_environment: Gc&lt;GcRefCell&lt;CompileTimeEnvironment&gt;&gt;,
+        compile_environment: Rc&lt;CompileTimeEnvironment&gt;,
         function_slots: FunctionSlots,
     ) {
-        <span class="kw">let </span>num_bindings = compile_environment.borrow().num_bindings();
+        <span class="kw">let </span>num_bindings = compile_environment.num_bindings();
 
         <span class="kw">let </span>(poisoned, with) = {
             <span class="kw">let </span>with = <span class="self">self
@@ -1138,12 +1082,12 @@
     </span><span class="attr">#[track_caller]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>push_function_inherit(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        compile_environment: Gc&lt;GcRefCell&lt;CompileTimeEnvironment&gt;&gt;,
+        compile_environment: Rc&lt;CompileTimeEnvironment&gt;,
     ) {
-        <span class="kw">let </span>num_bindings = compile_environment.borrow().num_bindings();
+        <span class="kw">let </span>num_bindings = compile_environment.num_bindings();
 
         <span class="macro">debug_assert!</span>(
-            <span class="self">self</span>.stack.len() <span class="kw">as </span>u32 == compile_environment.borrow().environment_index(),
+            <span class="self">self</span>.stack.len() <span class="kw">as </span>u32 == compile_environment.environment_index(),
             <span class="string">&quot;tried to push an invalid compile environment&quot;
         </span>);
 
@@ -1190,11 +1134,8 @@
     ///
     /// Panics if no environment exists on the stack.
     </span><span class="attr">#[track_caller]
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>push_module(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        compile_environment: Gc&lt;GcRefCell&lt;CompileTimeEnvironment&gt;&gt;,
-    ) {
-        <span class="kw">let </span>num_bindings = compile_environment.borrow().num_bindings();
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>push_module(<span class="kw-2">&amp;mut </span><span class="self">self</span>, compile_environment: Rc&lt;CompileTimeEnvironment&gt;) {
+        <span class="kw">let </span>num_bindings = compile_environment.num_bindings();
         <span class="self">self</span>.stack.push(Environment::Declarative(Gc::new(
             DeclarativeEnvironment::new(
                 DeclarativeEnvironmentKind::Module(ModuleEnvironment::new(num_bindings)),
@@ -1230,7 +1171,7 @@
     /// # Panics
     ///
     /// Panics if no environment exists on the stack.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>current_compile_environment(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Gc&lt;GcRefCell&lt;CompileTimeEnvironment&gt;&gt; {
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>current_compile_environment(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Rc&lt;CompileTimeEnvironment&gt; {
         <span class="self">self</span>.stack
             .iter()
             .filter_map(Environment::as_declarative)
@@ -1249,7 +1190,7 @@
             .filter_map(Environment::as_declarative)
         {
             env.poison();
-            <span class="kw">if </span>env.compile_env().borrow().is_function() {
+            <span class="kw">if </span>env.compile_env().is_function() {
                 <span class="kw">return</span>;
             }
         }
@@ -1313,7 +1254,7 @@
     ///  - [ECMAScript specification][spec]
     ///
     /// [spec]: https://tc39.es/ecma262/#sec-resolve-private-identifier
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>resolve_private_identifier(<span class="kw-2">&amp;</span><span class="self">self</span>, identifier: Sym) -&gt; <span class="prelude-ty">Option</span>&lt;PrivateName&gt; {
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>resolve_private_identifier(<span class="kw-2">&amp;</span><span class="self">self</span>, identifier: JsString) -&gt; <span class="prelude-ty">Option</span>&lt;PrivateName&gt; {
         <span class="comment">// 1. Let names be privEnv.[[Names]].
         // 2. For each Private Name pn of names, do
         //     a. If pn.[[Description]] is identifier, then
@@ -1330,12 +1271,12 @@
     </span>}
 
     <span class="doccomment">/// Return all private name descriptions in all private environments.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>private_name_descriptions(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Vec&lt;Sym&gt; {
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>private_name_descriptions(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Vec&lt;<span class="kw-2">&amp;</span>JsString&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>names = Vec::new();
         <span class="kw">for </span>environment <span class="kw">in </span><span class="self">self</span>.private_stack.iter().rev() {
             <span class="kw">for </span>name <span class="kw">in </span>environment.descriptions() {
-                <span class="kw">if </span>!names.contains(name) {
-                    names.push(<span class="kw-2">*</span>name);
+                <span class="kw">if </span>!names.contains(<span class="kw-2">&amp;</span>name) {
+                    names.push(name);
                 }
             }
         }
@@ -1352,8 +1293,6 @@
     environment_index: u32,
     binding_index: u32,
     global: bool,
-    mutate_immutable: bool,
-    silent: bool,
 }
 
 <span class="kw">unsafe impl </span>Trace <span class="kw">for </span>BindingLocator {
@@ -1372,8 +1311,6 @@
             environment_index,
             binding_index,
             global: <span class="bool-val">false</span>,
-            mutate_immutable: <span class="bool-val">false</span>,
-            silent: <span class="bool-val">false</span>,
         }
     }
 
@@ -1384,33 +1321,6 @@
             environment_index: <span class="number">0</span>,
             binding_index: <span class="number">0</span>,
             global: <span class="bool-val">true</span>,
-            mutate_immutable: <span class="bool-val">false</span>,
-            silent: <span class="bool-val">false</span>,
-        }
-    }
-
-    <span class="doccomment">/// Creates a binding locator that indicates that it was attempted to mutate an immutable binding.
-    /// At runtime this should always produce a type error.
-    </span><span class="kw">pub</span>(<span class="kw">in </span><span class="kw">crate</span>::environments) <span class="kw">const fn </span>mutate_immutable(name: Identifier) -&gt; <span class="self">Self </span>{
-        <span class="self">Self </span>{
-            name,
-            environment_index: <span class="number">0</span>,
-            binding_index: <span class="number">0</span>,
-            global: <span class="bool-val">false</span>,
-            mutate_immutable: <span class="bool-val">true</span>,
-            silent: <span class="bool-val">false</span>,
-        }
-    }
-
-    <span class="doccomment">/// Creates a binding locator that indicates that any action is silently ignored.
-    </span><span class="kw">pub</span>(<span class="kw">in </span><span class="kw">crate</span>::environments) <span class="kw">const fn </span>silent(name: Identifier) -&gt; <span class="self">Self </span>{
-        <span class="self">Self </span>{
-            name,
-            environment_index: <span class="number">0</span>,
-            binding_index: <span class="number">0</span>,
-            global: <span class="bool-val">false</span>,
-            mutate_immutable: <span class="bool-val">false</span>,
-            silent: <span class="bool-val">true</span>,
         }
     }
 
@@ -1433,26 +1343,15 @@
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const fn </span>binding_index(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u32 {
         <span class="self">self</span>.binding_index
     }
+}
 
-    <span class="doccomment">/// Returns if the binding is a silent operation.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const fn </span>is_silent(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
-        <span class="self">self</span>.silent
-    }
+<span class="doccomment">/// Action that is returned when a fallible binding operation.
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>BindingLocatorError {
+    <span class="doccomment">/// Trying to mutate immutable binding,
+    </span>MutateImmutable,
 
-    <span class="doccomment">/// Helper method to throws an error if the binding access is illegal.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>throw_mutate_immutable(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        context: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">&#39;_</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), JsNativeError&gt; {
-        <span class="kw">if </span><span class="self">self</span>.mutate_immutable {
-            <span class="prelude-val">Err</span>(JsNativeError::typ().with_message(<span class="macro">format!</span>(
-                <span class="string">&quot;cannot mutate an immutable binding &#39;{}&#39;&quot;</span>,
-                context.interner().resolve_expect(<span class="self">self</span>.name.sym())
-            )))
-        } <span class="kw">else </span>{
-            <span class="prelude-val">Ok</span>(())
-        }
-    }
+    <span class="doccomment">/// Indicates that any action is silently ignored.
+    </span>Silent,
 }
 
 <span class="kw">impl </span>Context&lt;<span class="lifetime">&#39;_</span>&gt; {
@@ -1479,7 +1378,6 @@
                 Environment::Declarative(env) =&gt; {
                     <span class="kw">if </span>env.poisoned() {
                         <span class="kw">let </span>compile = env.compile_env();
-                        <span class="kw">let </span>compile = compile.borrow();
                         <span class="kw">if </span>compile.is_function() {
                             <span class="kw">if let </span><span class="prelude-val">Some</span>(b) = compile.get_binding(locator.name) {
                                 locator.environment_index = b.environment_index;
