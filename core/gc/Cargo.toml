@@ -10,6 +10,7 @@ license.workspace = true
 repository.workspace = true
 rust-version.workspace = true
 
+
 [features]
 # Enable default implementations of trace and finalize for the thin-vec crate
 thin-vec = ["dep:thin-vec"]
