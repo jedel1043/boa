@@ -40,6 +40,7 @@ impl JsSet {
     ///
     /// Same as JavaScript's `set.size`.
     #[inline]
+    #[must_use]
     pub fn size(&self) -> usize {
         self.inner.borrow().data().len()
     }
@@ -90,6 +91,7 @@ impl JsSet {
     /// with the given value in the Set object or not.
     ///
     /// Same as JavaScript's `set.has(value)`.
+    #[must_use]
     pub fn has<T>(&self, value: T) -> bool
     where
         T: Into<JsValue>,

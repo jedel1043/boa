@@ -260,35 +260,6 @@ impl BuiltInConstructor for Set {
 }
 
 impl Set {
-    /// Utility for constructing `Set` objects.
-    pub(crate) fn set_create(prototype: Option<JsObject>, context: &mut Context) -> JsObject {
-        let prototype =
-            prototype.unwrap_or_else(|| context.intrinsics().constructors().set().prototype());
-
-        JsObject::from_proto_and_data_with_shared_shape(
-            context.root_shape(),
-            prototype,
-            OrderedSet::new(),
-        )
-        .upcast()
-    }
-
-    /// Utility for constructing `Set` objects from an iterator of `JsValue`'s.
-    pub(crate) fn create_set_from_list<I>(elements: I, context: &mut Context) -> JsObject
-    where
-        I: IntoIterator<Item = JsValue>,
-    {
-        // Create empty Set
-        let set = Self::set_create(None, context);
-        // For each element e of elements, do
-        for elem in elements {
-            Self::add(&set.clone().into(), &[elem], context)
-                .expect("adding new element shouldn't error out");
-        }
-
-        set
-    }
-
     /// `get Set [ @@species ]`
     ///
     /// The Set[Symbol.species] accessor property returns the Set constructor.
@@ -1089,6 +1060,10 @@ impl Set {
                     if in_other {
                         // a. Set resultSetData[index] to empty.
                         result_set.delete(&e);
+
+                        // No need to increment the index, after deletion we're
+                        // in the correct next position.
+                        continue;
                     }
                 }
 
