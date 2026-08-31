@@ -444,11 +444,15 @@ impl Iterator {
 
     // ==================== Prototype Methods — Eager (Consuming) ====================
 
-    /// `Iterator.prototype.includes ( searchElement [, skippedElements ] )`
-    #[cfg(feature = "experimental")] // Stage 2.7 iterator-includes proposal
+    /// [`Iterator.prototype.includes ( searchElement [, skippedElements ] )`][spec]
+    ///
+    /// [spec]: https://tc39.es/proposal-iterator-includes/#sec-iterator.prototype.includes
+    #[cfg(feature = "experimental")]
     fn includes(this: &JsValue, args: &[JsValue], context: &mut Context) -> JsResult<JsValue> {
-        // 1. Let O be the this value.
-        // 2. If O is not an Object, throw a TypeError exception.
+        // 1. Let obj be the this value.
+        // 2. If obj is not an Object, throw a TypeError exception.
+
+        use crate::builtins::Number;
         let obj = this.as_object().ok_or_else(
             || js_error!(TypeError: "Iterator.prototype.includes called on non-object"),
         )?;
@@ -458,52 +462,65 @@ impl Iterator {
 
         let search_element = args.get_or_undefined(0);
 
-        // 4. If skippedElements is undefined, then
-        // a. Let toSkip be 0.
-        // 5. Else,
-        // a. If skippedElements is not one of +∞𝔽, -∞𝔽, or an integral Number, then
-        // i. Let error be ThrowCompletion(a newly created TypeError object).
-        // ii. Return ? IteratorClose(iterated, error).
-        // b. Let toSkip be the extended mathematical value of skippedElements.
         let to_skip = match args.get_or_undefined(1).map(JsValue::as_number) {
-            // Step 4.a
-            None => 0,
-            // Step 5.b
-            Some(Some(number)) if !number.is_nan() => {
-                number.clamp(i64::MIN as f64, i64::MAX as f64) as i64
+            // 4. If skippedElements is undefined, then
+            // 4.a. Let toSkip be 0.
+            None => Some(0i64),
+            // 5. Else,
+            // 5.b. Let toSkip be the extended mathematical value of skippedElements.
+            Some(Some(number)) if Number::is_float_integer(number) => Some(number as i64),
+            Some(Some(number)) if number.is_infinite() && number.is_sign_positive() => None,
+            Some(Some(number)) if number.is_infinite() && number.is_sign_negative() => {
+                Some(i64::MIN)
             }
-            // Step 5.a
+            // 5.a. If skippedElements is not one of +∞𝔽, -∞𝔽, or an integral Number, then
             _ => {
-                let error = js_error!(TypeError: "skippedElements must be a number");
+                // 5.a.i. Let error be ThrowCompletion(a newly created TypeError object).
+                // 5.a.ii. Return ? IteratorClose(iterated, error).
+                let error = js_error!(TypeError: "skippedElements must be an integer number");
                 return iterated.close(Err(error), context);
             }
         };
 
         // 6. If toSkip < 0, then
-        if to_skip < 0 {
-            // a. Let error be ThrowCompletion(a newly created RangeError object).
-            let error = js_error!(RangeError: "skippedElements must be a positive number");
-            // b. Return ? IteratorClose(iterated, error).
-            return iterated.close(Err(error), context);
+        if let Some(to_skip) = to_skip {
+            if to_skip < 0 {
+                // a. Let error be ThrowCompletion(a newly created RangeError object).
+                let error = js_error!(RangeError: "skippedElements must be a positive number");
+                // b. Return ? IteratorClose(iterated, error).
+                return iterated.close(Err(error), context);
+            }
+            // 7. If toSkip is finite and toSkip > 𝔽(2**53 - 1), then
+            if to_skip > Number::MAX_SAFE_INTEGER as i64 {
+                // 7.a. Let error be ThrowCompletion(a newly created RangeError object).
+                let error = js_error!(RangeError: "skippedElements cannot exceed 2**53 - 1");
+                // 7.b. Return ? IteratorClose(iterated, error).
+                return iterated.close(Err(error), context);
+            }
         }
 
         // 7. Let skipped be 0.
-        let mut skipped = 0;
+        let mut skipped: i64 = 0;
 
         // 8. Set iterated to ? GetIteratorDirect(O).
         let mut iterated = get_iterator_direct(&obj, context)?;
 
         // 9. Repeat,
+        // 9.a. Let value be ? IteratorStepValue(iterated).
         while let Some(value) = iterated.step_value(context)? {
-            // a. Let value be ? IteratorStepValue(iterated).
-            // b. If value is done, return false.
-            // c. If skipped < toSkip, then
+            let Some(to_skip) = to_skip else {
+                // skipping Infinity elements
+                continue;
+            };
+
+            // 9.c. If skipped < toSkip, then
             if skipped < to_skip {
-                // i. Set skipped to skipped + 1.
+                // 9.c.i. Set skipped to skipped + 1.
                 skipped += 1;
-            // d. Else if SameValueZero(value, searchElement) is true, then
+
+            // 9.d. Else if SameValueZero(value, searchElement) is true, then
             } else if JsValue::same_value_zero(&value, search_element) {
-                // i. Return ? IteratorClose(iterated, NormalCompletion(true)).
+                // 9.d.i. Return ? IteratorClose(iterated, NormalCompletion(true)).
                 return iterated.close(Ok(true.into()), context);
             }
         }
